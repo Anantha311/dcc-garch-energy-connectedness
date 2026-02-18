@@ -1,0 +1,3556 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[R.app GUI 1.82 (8556) x86_64-apple-darwin20]
+
+[History restored from /Users/Prem/.Rapp.history]
+
+> list.of.packages <- c("zoo","xts","PerformanceAnalytics","rugarch","rmgarch","ConnectednessApproach",
++                      "knitr","stargazer","e1071","tseries","FinTS")
+> new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+> if(length(new.packages)) install.packages(new.packages)
+--- Please select a CRAN mirror for use in this session ---
+also installing the dependencies ‘TTR’, ‘proxy’, ‘quantmod’
+
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/TTR_0.24.4.tgz'
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/proxy_0.4-27.tgz'
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/quantmod_0.4.28.tgz'
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/e1071_1.7-16.tgz'
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/tseries_0.10-58.tgz'
+trying URL 'https://cran.icts.res.in/bin/macosx/big-sur-x86_64/contrib/4.5/FinTS_0.4-9.tgz'
+
+The downloaded binary packages are in
+	/var/folders/n0/14p064n91zd8dy_r7fbgzmtr0000gp/T//RtmpcDsL1v/downloaded_packages
+> library(zoo)
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+> library(xts)
+> library(PerformanceAnalytics)
+
+Attaching package: ‘PerformanceAnalytics’
+
+The following object is masked from ‘package:graphics’:
+
+    legend
+
+> library(rugarch)
+Loading required package: parallel
+> library(rmgarch)
+
+Attaching package: ‘rmgarch’
+
+The following objects are masked from ‘package:xts’:
+
+    first, last
+
+> library(ConnectednessApproach)
+
+Please cite as: 
+
+ Gabauer, David (2022). ConnectednessApproach.
+ R package version 1.0.0. https://CRAN.R-project.org/package=ConnectednessApproach 
+
+> library(knitr)
+> library(stargazer)
+
+Please cite as: 
+
+ Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables.
+ R package version 5.2.3. https://CRAN.R-project.org/package=stargazer 
+
+> library(e1071)
+
+Attaching package: ‘e1071’
+
+The following objects are masked from ‘package:PerformanceAnalytics’:
+
+    kurtosis, skewness
+
+> library(tseries)
+Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo 
+
+    ‘tseries’ version: 0.10-58
+
+    ‘tseries’ is a package for time series analysis and computational finance.
+
+    See ‘library(help="tseries")’ for details.
+
+> library(FinTS)
+> df <- read.csv("Framexcel1.csv", stringsAsFactors = FALSE)
+Error in file(file, "rt") : cannot open the connection
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file 'Framexcel1.csv': No such file or directory
+> 
+> df$Date <- as.Date(df$Date)
+Error in df$Date : object of type 'closure' is not subsettable
+> df <- read.csv("/Users/Prem/Desktop/ACADS Sem-5/FRAM/Framexcel1.csv", stringsAsFactors = FALSE)
+> 
+> df$Date <- as.Date(df$Date)
+> returns_df <- df[-1, ]
+> for(col in colnames(df)[-1]){
++   returns_df[, col] <- 100 * diff(log(df[, col]))
++ }
+Warning message:
+In log(df[, col]) : NaNs produced
+> returns_df <- df[-1, ]
+> for(col in colnames(df)[-1]){
++   returns_df[, col] <- 100 * (df[-1, col] - df[-nrow(df), col]) / df[-nrow(df), col]
++ }
+> Y <- zoo(returns_df[, -1], order.by = returns_df$Date)
+> Y_complete <- na.omit(Y)
+> NAMES <- colnames(Y_complete)
+> k <- ncol(Y_complete)
+> par(mfrow = c(ceiling(k/2), 2), oma=c(0,1,0,0)+0.5, mar=c(1,1,1,1)+0.5, mgp=c(1,0.4,0))
+> for(i in 1:k){
++   plot(index(Y_complete), coredata(Y_complete)[, i], type = "l", col = "steelblue4",
++        main = NAMES[i], xlab = "", ylab = "Returns (%)")
++   grid()
++   abline(h=0, lty=3)
++   box()
++ }
+> summary_stats <- data.frame(
++   Mean = apply(Y_complete, 2, mean),
++   Variance = apply(Y_complete, 2, var),
++   Skewness = apply(Y_complete, 2, skewness),
++   Kurtosis = apply(Y_complete, 2, kurtosis)
++ )
+> print(summary_stats)
+                   Mean  Variance    Skewness    Kurtosis
+GRNSOLAR    0.065921272  4.303295  -0.1559510    4.403551
+GRNWIND     0.039721949  2.911068  -0.1823654    3.837938
+GRNGEO      0.020466541  2.823355   0.7030336   13.651521
+GRNFUEL     0.062105392 11.950094   0.6984813    4.970816
+GRNBIO      0.005625841  3.419707  -0.4838450    8.659517
+CL1.Comdty -0.058782573 38.836996 -36.7631910 1736.929358
+NG1.Comdty  0.075655414 13.014699   0.8206784   12.377498
+> kable(SummaryStatistics(Y, nlag=20))
+The following statistics are used:
+
+          Skewness: D'Agostino, R.B. (1970). Transformation to Normality of the Null Distribution of G1. Biometrika, 57, 3, 679-681.
+
+          Excess Kurtosis: Anscombe, F.J., Glynn, W.J. (1983) Distribution of kurtosis statistic for normal statistics. Biometrika, 70, 1, 227-234
+
+          Normality test: Jarque, C. M., & Bera, A. K. (1980). Efficient tests for normality, homoscedasticity and serial independence of regression residuals. Economics Letters, 6(3), 255-259.
+
+          ERS unit-root test: Elliott, G., Rothenberg, T. J., & Stock, J. H. (1996). Efficient Tests for an Autoregressive Unit Root. Econometrica, 64(4), 813-836.
+
+          Weighted Portmanteau statistics: Fisher, T. J., & Gallagher, C. M. (2012). New weighted portmanteau statistics for time series goodness of fit testing. Journal of the American Statistical Association, 107(498), 777-787.
+
+          
+
+
+|            |GRNSOLAR    |GRNWIND     |GRNGEO       |GRNFUEL     |GRNBIO       |CL1.Comdty       |NG1.Comdty   |
+|:-----------|:-----------|:-----------|:------------|:-----------|:------------|:----------------|:------------|
+|Mean        |0.066*      |0.040       |0.020        |0.062       |0.006        |-0.059           |0.076        |
+|            |(0.063)     |(0.172)     |(0.475)      |(0.292)     |(0.858)      |(0.580)          |(0.219)      |
+|Variance    |4.303       |2.911       |2.823        |11.95       |3.42         |38.837           |13.015       |
+|Skewness    |-0.156***   |-0.182***   |0.703***     |0.699***    |-0.484***    |-36.779***       |0.821***     |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|Ex.Kurtosis |4.408***    |3.842***    |13.661***    |4.975***    |8.666***     |1737.942***      |12.386***    |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|JB          |2797.185*** |2133.491*** |27018.021*** |3825.973*** |10893.024*** |433453464.912*** |22364.259*** |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|ERS         |-9.615***   |-15.862***  |-25.315***   |-25.913***  |-13.112***   |-22.243***       |-15.624***   |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|Q(20)       |57.040***   |34.918***   |25.648***    |22.085***   |59.798***    |378.173***       |46.849***    |
+|            |(0.000)     |(0.000)     |(0.001)      |(0.007)     |(0.000)      |(0.000)          |(0.000)      |
+|Q2(20)      |1682.646*** |241.795***  |346.096***   |500.638***  |2822.416***  |99.959***        |307.950***   |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|kendall     |GRNSOLAR    |GRNWIND     |GRNGEO       |GRNFUEL     |GRNBIO       |CL1.Comdty       |NG1.Comdty   |
+|GRNSOLAR    |1.000***    |0.269***    |0.246***     |0.313***    |0.267***     |0.119***         |0.010        |
+|GRNWIND     |0.269***    |1.000***    |0.192***     |0.224***    |0.195***     |0.058***         |-0.009       |
+|GRNGEO      |0.246***    |0.192***    |1.000***     |0.208***    |0.216***     |0.091***         |-0.004       |
+|GRNFUEL     |0.313***    |0.224***    |0.208***     |1.000***    |0.247***     |0.115***         |0.025**      |
+|GRNBIO      |0.267***    |0.195***    |0.216***     |0.247***    |1.000***     |0.201***         |0.019        |
+|CL1.Comdty  |0.119***    |0.058***    |0.091***     |0.115***    |0.201***     |1.000***         |0.082***     |
+|NG1.Comdty  |0.010       |-0.009      |-0.004       |0.025**     |0.019        |0.082***         |1.000***     |
+> spec <- list()
+> for (i in 1:k) {
++   sel <- GARCHselection(
++     Y_complete[, i],
++     distributions = c("norm", "std", "sstd", "ged", "sged"),
++     models = c("sGARCH", "gjrGARCH", "eGARCH", "iGARCH", "AVGARCH", "TGARCH")
++   )
++ spec[[i]] <- ugarchspec(
++     variance.model = list(model = as.character(sel$best_model)),
++     mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
++     distribution.model = as.character(sel$best_distribution)
++   )
++   cat("Selected model for ", NAMES[i], ": ", sel$best_model, " with distribution ", sel$best_distribution, "\n")
++ }
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+Error in .local(variance.model, mean.model, distribution.model, start.pars,  : 
+  
+ugarchspec-->error: the cond.distribution does not appear to be a valid choice.
+> names(spec) <- NAMES
+Error in names(spec) <- NAMES : 
+  'names' attribute [7] must be the same length as the vector [0]
+> spec <- list()
+> for (i in 1:k) {
++   u <- GARCHselection(
++     Y[, i],
++     distributions = c("norm", "std", "sstd", "ged", "sged"),
++     models = c("sGARCH", "gjrGARCH", "eGARCH", "iGARCH", "AVGARCH", "TGARCH")
++   )
++   
++   # Construct ugarchspec from the model and distribution selected
++   spec[[i]] <- ugarchspec(
++     variance.model = list(model = as.character(u$best_model)),
++     mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
++     distribution.model = as.character(u$best_distribution)
++   )
++ }
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+Error in .local(variance.model, mean.model, distribution.model, start.pars,  : 
+  
+ugarchspec-->error: the cond.distribution does not appear to be a valid choice.
+> names(spec) <- colnames(Y)
+Error in names(spec) <- colnames(Y) : 
+  'names' attribute [7] must be the same length as the vector [0]
+> spec <- vector("list", k)
+> for (i in 1:k) {
++   u <- GARCHselection(Y_complete[, i],
++                       distributions = c("norm", "std", "sstd", "ged", "sged"),
++                       models = c("sGARCH", "gjrGARCH", "eGARCH", "iGARCH", "AVGARCH", "TGARCH"))
++   spec[[i]] <- ugarchspec(
++     variance.model = list(model = as.character(u$best_model)),
++     mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
++     distribution.model = as.character(u$best_distribution)
++   )
++ }
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+Error in .local(variance.model, mean.model, distribution.model, start.pars,  : 
+  
+ugarchspec-->error: the cond.distribution does not appear to be a valid choice.
+> spec = NULL
+> for (i in 1:k) {
++   u = GARCHselection(Y[,i],
++                      distributions=c("norm","std","sstd","ged","sged"),
++                      models=c("sGARCH","gjrGARCH","eGARCH","iGARCH","AVGARCH","TGARCH"))
++   spec = c(spec, u$best_ugarch)
++ }
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-sGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-gjrGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-eGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-iGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-AVGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+-TGARCH
+--norm
+--std
+--sstd
+--ged
+--sged
+> fit = BivariateDCCGARCH(Y, spec)
+[1] "DCC-GARCH estimation based on GRNSOLAR and GRNWIND"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -13050.66
+Av.Log-Likelihood	:  -3.796 
+
+Optimal Parameters
+---------------------------------------------------
+                   Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu      0.053190          NA       NA       NA
+[GRNSOLAR].omega   0.042705          NA       NA       NA
+[GRNSOLAR].alpha1  0.080293          NA       NA       NA
+[GRNSOLAR].beta1   0.913419          NA       NA       NA
+[GRNSOLAR].eta11  -0.066360          NA       NA       NA
+[GRNSOLAR].eta21   0.415860          NA       NA       NA
+[GRNSOLAR].skew    0.985270          NA       NA       NA
+[GRNSOLAR].shape   1.377914          NA       NA       NA
+[GRNWIND].mu       0.059145          NA       NA       NA
+[GRNWIND].omega    0.020147          NA       NA       NA
+[GRNWIND].alpha1  -0.048480          NA       NA       NA
+[GRNWIND].beta1    0.978689          NA       NA       NA
+[GRNWIND].gamma1   0.126279          NA       NA       NA
+[GRNWIND].shape    5.268673          NA       NA       NA
+[Joint]dcca1       0.011206          NA       NA       NA
+[Joint]dccb1       0.987763          NA       NA       NA
+[Joint]mshape     11.285835          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.6019
+Bayes        7.6323
+Shibata      7.6018
+Hannan-Quinn 7.6127
+
+
+Elapsed time : 8.504606 
+
+[1] "DCC-GARCH estimation based on GRNSOLAR and GRNGEO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -12652.19
+Av.Log-Likelihood	:  -3.68 
+
+Optimal Parameters
+---------------------------------------------------
+                   Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu      0.053190          NA       NA       NA
+[GRNSOLAR].omega   0.042705          NA       NA       NA
+[GRNSOLAR].alpha1  0.080293          NA       NA       NA
+[GRNSOLAR].beta1   0.913419          NA       NA       NA
+[GRNSOLAR].eta11  -0.066360          NA       NA       NA
+[GRNSOLAR].eta21   0.415860          NA       NA       NA
+[GRNSOLAR].skew    0.985270          NA       NA       NA
+[GRNSOLAR].shape   1.377914          NA       NA       NA
+[GRNGEO].mu        0.001522          NA       NA       NA
+[GRNGEO].omega     0.025739          NA       NA       NA
+[GRNGEO].alpha1    0.083572          NA       NA       NA
+[GRNGEO].beta1     0.923206          NA       NA       NA
+[GRNGEO].eta11     0.351381          NA       NA       NA
+[GRNGEO].skew      0.916768          NA       NA       NA
+[GRNGEO].shape     4.345988          NA       NA       NA
+[Joint]dcca1       0.026381          NA       NA       NA
+[Joint]dccb1       0.958824          NA       NA       NA
+[Joint]mshape     10.817127          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.3707
+Bayes        7.4028
+Shibata      7.3706
+Hannan-Quinn 7.3822
+
+
+Elapsed time : 7.897928 
+
+[1] "DCC-GARCH estimation based on GRNSOLAR and GRNFUEL"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  20
+[VAR GARCH DCC UncQ]: [0+16+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15223.61
+Av.Log-Likelihood	:  -4.428 
+
+Optimal Parameters
+---------------------------------------------------
+                   Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu      0.053190          NA       NA       NA
+[GRNSOLAR].omega   0.042705          NA       NA       NA
+[GRNSOLAR].alpha1  0.080293          NA       NA       NA
+[GRNSOLAR].beta1   0.913419          NA       NA       NA
+[GRNSOLAR].eta11  -0.066360          NA       NA       NA
+[GRNSOLAR].eta21   0.415860          NA       NA       NA
+[GRNSOLAR].skew    0.985270          NA       NA       NA
+[GRNSOLAR].shape   1.377914          NA       NA       NA
+[GRNFUEL].mu      -0.002314          NA       NA       NA
+[GRNFUEL].omega    0.046831          NA       NA       NA
+[GRNFUEL].alpha1   0.083549          NA       NA       NA
+[GRNFUEL].beta1    0.926374          NA       NA       NA
+[GRNFUEL].eta11   -0.283735          NA       NA       NA
+[GRNFUEL].eta21    0.426899          NA       NA       NA
+[GRNFUEL].skew     1.123793          NA       NA       NA
+[GRNFUEL].shape    4.828847          NA       NA       NA
+[Joint]dcca1       0.017270          NA       NA       NA
+[Joint]dccb1       0.973332          NA       NA       NA
+[Joint]mshape     11.855689          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.8671
+Bayes        8.9011
+Shibata      8.8671
+Hannan-Quinn 8.8793
+
+
+Elapsed time : 9.510669 
+
+[1] "DCC-GARCH estimation based on GRNSOLAR and GRNBIO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -13056.51
+Av.Log-Likelihood	:  -3.798 
+
+Optimal Parameters
+---------------------------------------------------
+                   Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu      0.053190          NA       NA       NA
+[GRNSOLAR].omega   0.042705          NA       NA       NA
+[GRNSOLAR].alpha1  0.080293          NA       NA       NA
+[GRNSOLAR].beta1   0.913419          NA       NA       NA
+[GRNSOLAR].eta11  -0.066360          NA       NA       NA
+[GRNSOLAR].eta21   0.415860          NA       NA       NA
+[GRNSOLAR].skew    0.985270          NA       NA       NA
+[GRNSOLAR].shape   1.377914          NA       NA       NA
+[GRNBIO].mu        0.004430          NA       NA       NA
+[GRNBIO].omega     0.008588          NA       NA       NA
+[GRNBIO].alpha1   -0.053037          NA       NA       NA
+[GRNBIO].beta1     0.989931          NA       NA       NA
+[GRNBIO].gamma1    0.145184          NA       NA       NA
+[GRNBIO].skew      0.936896          NA       NA       NA
+[GRNBIO].shape     7.656646          NA       NA       NA
+[Joint]dcca1       0.024724          NA       NA       NA
+[Joint]dccb1       0.953789          NA       NA       NA
+[Joint]mshape     15.839937          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.6059
+Bayes        7.6380
+Shibata      7.6058
+Hannan-Quinn 7.6174
+
+
+Elapsed time : 10.61614 
+
+[1] "DCC-GARCH estimation based on GRNSOLAR and CL1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -14232.87
+Av.Log-Likelihood	:  -4.14 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu        0.053190          NA       NA       NA
+[GRNSOLAR].omega     0.042705          NA       NA       NA
+[GRNSOLAR].alpha1    0.080293          NA       NA       NA
+[GRNSOLAR].beta1     0.913419          NA       NA       NA
+[GRNSOLAR].eta11    -0.066360          NA       NA       NA
+[GRNSOLAR].eta21     0.415860          NA       NA       NA
+[GRNSOLAR].skew      0.985270          NA       NA       NA
+[GRNSOLAR].shape     1.377914          NA       NA       NA
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[Joint]dcca1         0.033626          NA       NA       NA
+[Joint]dccb1         0.907540          NA       NA       NA
+[Joint]mshape       25.556207          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.2902
+Bayes        8.3224
+Shibata      8.2902
+Hannan-Quinn 8.3017
+
+
+Elapsed time : 13.35117 
+
+[1] "DCC-GARCH estimation based on GRNSOLAR and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15745.13
+Av.Log-Likelihood	:  -4.58 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNSOLAR].mu        0.053190          NA       NA       NA
+[GRNSOLAR].omega     0.042705          NA       NA       NA
+[GRNSOLAR].alpha1    0.080293          NA       NA       NA
+[GRNSOLAR].beta1     0.913419          NA       NA       NA
+[GRNSOLAR].eta11    -0.066360          NA       NA       NA
+[GRNSOLAR].eta21     0.415860          NA       NA       NA
+[GRNSOLAR].skew      0.985270          NA       NA       NA
+[GRNSOLAR].shape     1.377914          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.003706          NA       NA       NA
+[Joint]dccb1         0.993011          NA       NA       NA
+[Joint]mshape       50.000000          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       9.1694
+Bayes        9.1997
+Shibata      9.1693
+Hannan-Quinn 9.1802
+
+
+Elapsed time : 13.36776 
+
+[1] "DCC-GARCH estimation based on GRNWIND and GRNGEO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -12124.06
+Av.Log-Likelihood	:  -3.526 
+
+Optimal Parameters
+---------------------------------------------------
+                  Estimate  Std. Error  t value Pr(>|t|)
+[GRNWIND].mu      0.059145          NA       NA       NA
+[GRNWIND].omega   0.020147          NA       NA       NA
+[GRNWIND].alpha1 -0.048480          NA       NA       NA
+[GRNWIND].beta1   0.978689          NA       NA       NA
+[GRNWIND].gamma1  0.126279          NA       NA       NA
+[GRNWIND].shape   5.268673          NA       NA       NA
+[GRNGEO].mu       0.001522          NA       NA       NA
+[GRNGEO].omega    0.025739          NA       NA       NA
+[GRNGEO].alpha1   0.083572          NA       NA       NA
+[GRNGEO].beta1    0.923206          NA       NA       NA
+[GRNGEO].eta11    0.351381          NA       NA       NA
+[GRNGEO].skew     0.916768          NA       NA       NA
+[GRNGEO].shape    4.345988          NA       NA       NA
+[Joint]dcca1      0.008859          NA       NA       NA
+[Joint]dccb1      0.986343          NA       NA       NA
+[Joint]mshape    10.545858          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.0623
+Bayes        7.0909
+Shibata      7.0622
+Hannan-Quinn 7.0725
+
+
+Elapsed time : 6.849587 
+
+[1] "DCC-GARCH estimation based on GRNWIND and GRNFUEL"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -14785.3
+Av.Log-Likelihood	:  -4.301 
+
+Optimal Parameters
+---------------------------------------------------
+                  Estimate  Std. Error  t value Pr(>|t|)
+[GRNWIND].mu      0.059145          NA       NA       NA
+[GRNWIND].omega   0.020147          NA       NA       NA
+[GRNWIND].alpha1 -0.048480          NA       NA       NA
+[GRNWIND].beta1   0.978689          NA       NA       NA
+[GRNWIND].gamma1  0.126279          NA       NA       NA
+[GRNWIND].shape   5.268673          NA       NA       NA
+[GRNFUEL].mu     -0.002314          NA       NA       NA
+[GRNFUEL].omega   0.046831          NA       NA       NA
+[GRNFUEL].alpha1  0.083549          NA       NA       NA
+[GRNFUEL].beta1   0.926374          NA       NA       NA
+[GRNFUEL].eta11  -0.283735          NA       NA       NA
+[GRNFUEL].eta21   0.426899          NA       NA       NA
+[GRNFUEL].skew    1.123793          NA       NA       NA
+[GRNFUEL].shape   4.828847          NA       NA       NA
+[Joint]dcca1      0.008569          NA       NA       NA
+[Joint]dccb1      0.988353          NA       NA       NA
+[Joint]mshape     9.594520          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.6110
+Bayes        8.6414
+Shibata      8.6109
+Hannan-Quinn 8.6218
+
+
+Elapsed time : 14.0101 
+
+[1] "DCC-GARCH estimation based on GRNWIND and GRNBIO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -12575.49
+Av.Log-Likelihood	:  -3.658 
+
+Optimal Parameters
+---------------------------------------------------
+                  Estimate  Std. Error  t value Pr(>|t|)
+[GRNWIND].mu      0.059145          NA       NA       NA
+[GRNWIND].omega   0.020147          NA       NA       NA
+[GRNWIND].alpha1 -0.048480          NA       NA       NA
+[GRNWIND].beta1   0.978689          NA       NA       NA
+[GRNWIND].gamma1  0.126279          NA       NA       NA
+[GRNWIND].shape   5.268673          NA       NA       NA
+[GRNBIO].mu       0.004430          NA       NA       NA
+[GRNBIO].omega    0.008588          NA       NA       NA
+[GRNBIO].alpha1  -0.053037          NA       NA       NA
+[GRNBIO].beta1    0.989931          NA       NA       NA
+[GRNBIO].gamma1   0.145184          NA       NA       NA
+[GRNBIO].skew     0.936896          NA       NA       NA
+[GRNBIO].shape    7.656646          NA       NA       NA
+[Joint]dcca1      0.011498          NA       NA       NA
+[Joint]dccb1      0.976799          NA       NA       NA
+[Joint]mshape    18.379394          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.3249
+Bayes        7.3535
+Shibata      7.3249
+Hannan-Quinn 7.3351
+
+
+Elapsed time : 6.764052 
+
+[1] "DCC-GARCH estimation based on GRNWIND and CL1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -13643.34
+Av.Log-Likelihood	:  -3.968 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNWIND].mu         0.059145          NA       NA       NA
+[GRNWIND].omega      0.020147          NA       NA       NA
+[GRNWIND].alpha1    -0.048480          NA       NA       NA
+[GRNWIND].beta1      0.978689          NA       NA       NA
+[GRNWIND].gamma1     0.126279          NA       NA       NA
+[GRNWIND].shape      5.268673          NA       NA       NA
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[Joint]dcca1         0.010558          NA       NA       NA
+[Joint]dccb1         0.981870          NA       NA       NA
+[Joint]mshape       25.436694          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.9461
+Bayes        7.9747
+Shibata      7.9461
+Hannan-Quinn 7.9563
+
+
+Elapsed time : 7.451512 
+
+[1] "DCC-GARCH estimation based on GRNWIND and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  16
+[VAR GARCH DCC UncQ]: [0+12+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15115.04
+Av.Log-Likelihood	:  -4.396 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNWIND].mu         0.059145          NA       NA       NA
+[GRNWIND].omega      0.020147          NA       NA       NA
+[GRNWIND].alpha1    -0.048480          NA       NA       NA
+[GRNWIND].beta1      0.978689          NA       NA       NA
+[GRNWIND].gamma1     0.126279          NA       NA       NA
+[GRNWIND].shape      5.268673          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.002983          NA       NA       NA
+[Joint]dccb1         0.979110          NA       NA       NA
+[Joint]mshape       50.000000          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.8017
+Bayes        8.8285
+Shibata      8.8016
+Hannan-Quinn 8.8112
+
+
+Elapsed time : 9.260892 
+
+[1] "DCC-GARCH estimation based on GRNGEO and GRNFUEL"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -14341.95
+Av.Log-Likelihood	:  -4.172 
+
+Optimal Parameters
+---------------------------------------------------
+                  Estimate  Std. Error  t value Pr(>|t|)
+[GRNGEO].mu       0.001522          NA       NA       NA
+[GRNGEO].omega    0.025739          NA       NA       NA
+[GRNGEO].alpha1   0.083572          NA       NA       NA
+[GRNGEO].beta1    0.923206          NA       NA       NA
+[GRNGEO].eta11    0.351381          NA       NA       NA
+[GRNGEO].skew     0.916768          NA       NA       NA
+[GRNGEO].shape    4.345988          NA       NA       NA
+[GRNFUEL].mu     -0.002314          NA       NA       NA
+[GRNFUEL].omega   0.046831          NA       NA       NA
+[GRNFUEL].alpha1  0.083549          NA       NA       NA
+[GRNFUEL].beta1   0.926374          NA       NA       NA
+[GRNFUEL].eta11  -0.283735          NA       NA       NA
+[GRNFUEL].eta21   0.426899          NA       NA       NA
+[GRNFUEL].skew    1.123793          NA       NA       NA
+[GRNFUEL].shape   4.828847          NA       NA       NA
+[Joint]dcca1      0.023159          NA       NA       NA
+[Joint]dccb1      0.964207          NA       NA       NA
+[Joint]mshape    10.343628          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.3537
+Bayes        8.3858
+Shibata      8.3536
+Hannan-Quinn 8.3652
+
+
+Elapsed time : 9.061578 
+
+[1] "DCC-GARCH estimation based on GRNGEO and GRNBIO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -12073.63
+Av.Log-Likelihood	:  -3.512 
+
+Optimal Parameters
+---------------------------------------------------
+                 Estimate  Std. Error  t value Pr(>|t|)
+[GRNGEO].mu      0.001522          NA       NA       NA
+[GRNGEO].omega   0.025739          NA       NA       NA
+[GRNGEO].alpha1  0.083572          NA       NA       NA
+[GRNGEO].beta1   0.923206          NA       NA       NA
+[GRNGEO].eta11   0.351381          NA       NA       NA
+[GRNGEO].skew    0.916768          NA       NA       NA
+[GRNGEO].shape   4.345988          NA       NA       NA
+[GRNBIO].mu      0.004430          NA       NA       NA
+[GRNBIO].omega   0.008588          NA       NA       NA
+[GRNBIO].alpha1 -0.053037          NA       NA       NA
+[GRNBIO].beta1   0.989931          NA       NA       NA
+[GRNBIO].gamma1  0.145184          NA       NA       NA
+[GRNBIO].skew    0.936896          NA       NA       NA
+[GRNBIO].shape   7.656646          NA       NA       NA
+[Joint]dcca1     0.015190          NA       NA       NA
+[Joint]dccb1     0.969924          NA       NA       NA
+[Joint]mshape   17.717811          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.0335
+Bayes        7.0639
+Shibata      7.0335
+Hannan-Quinn 7.0444
+
+
+Elapsed time : 7.465365 
+
+[1] "DCC-GARCH estimation based on GRNGEO and CL1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -13144.87
+Av.Log-Likelihood	:  -3.823 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNGEO].mu          0.001522          NA       NA       NA
+[GRNGEO].omega       0.025739          NA       NA       NA
+[GRNGEO].alpha1      0.083572          NA       NA       NA
+[GRNGEO].beta1       0.923206          NA       NA       NA
+[GRNGEO].eta11       0.351381          NA       NA       NA
+[GRNGEO].skew        0.916768          NA       NA       NA
+[GRNGEO].shape       4.345988          NA       NA       NA
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[Joint]dcca1         0.012311          NA       NA       NA
+[Joint]dccb1         0.975555          NA       NA       NA
+[Joint]mshape       14.188673          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.6567
+Bayes        7.6871
+Shibata      7.6567
+Hannan-Quinn 7.6675
+
+
+Elapsed time : 7.481779 
+
+[1] "DCC-GARCH estimation based on GRNGEO and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -14636.9
+Av.Log-Likelihood	:  -4.257 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNGEO].mu          0.001522          NA       NA       NA
+[GRNGEO].omega       0.025739          NA       NA       NA
+[GRNGEO].alpha1      0.083572          NA       NA       NA
+[GRNGEO].beta1       0.923206          NA       NA       NA
+[GRNGEO].eta11       0.351381          NA       NA       NA
+[GRNGEO].skew        0.916768          NA       NA       NA
+[GRNGEO].shape       4.345988          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.009212          NA       NA       NA
+[Joint]dccb1         0.961832          NA       NA       NA
+[Joint]mshape       50.000000          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.5241
+Bayes        8.5527
+Shibata      8.5240
+Hannan-Quinn 8.5343
+
+
+Elapsed time : 7.403689 
+
+[1] "DCC-GARCH estimation based on GRNFUEL and GRNBIO"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -14741.42
+Av.Log-Likelihood	:  -4.288 
+
+Optimal Parameters
+---------------------------------------------------
+                  Estimate  Std. Error  t value Pr(>|t|)
+[GRNFUEL].mu     -0.002314          NA       NA       NA
+[GRNFUEL].omega   0.046831          NA       NA       NA
+[GRNFUEL].alpha1  0.083549          NA       NA       NA
+[GRNFUEL].beta1   0.926374          NA       NA       NA
+[GRNFUEL].eta11  -0.283735          NA       NA       NA
+[GRNFUEL].eta21   0.426899          NA       NA       NA
+[GRNFUEL].skew    1.123793          NA       NA       NA
+[GRNFUEL].shape   4.828847          NA       NA       NA
+[GRNBIO].mu       0.004430          NA       NA       NA
+[GRNBIO].omega    0.008588          NA       NA       NA
+[GRNBIO].alpha1  -0.053037          NA       NA       NA
+[GRNBIO].beta1    0.989931          NA       NA       NA
+[GRNBIO].gamma1   0.145184          NA       NA       NA
+[GRNBIO].skew     0.936896          NA       NA       NA
+[GRNBIO].shape    7.656646          NA       NA       NA
+[Joint]dcca1      0.021326          NA       NA       NA
+[Joint]dccb1      0.964694          NA       NA       NA
+[Joint]mshape    16.902909          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.5860
+Bayes        8.6182
+Shibata      8.5860
+Hannan-Quinn 8.5975
+
+
+Elapsed time : 8.839997 
+
+[1] "DCC-GARCH estimation based on GRNFUEL and CL1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  19
+[VAR GARCH DCC UncQ]: [0+15+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15846.5
+Av.Log-Likelihood	:  -4.609 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNFUEL].mu        -0.002314          NA       NA       NA
+[GRNFUEL].omega      0.046831          NA       NA       NA
+[GRNFUEL].alpha1     0.083549          NA       NA       NA
+[GRNFUEL].beta1      0.926374          NA       NA       NA
+[GRNFUEL].eta11     -0.283735          NA       NA       NA
+[GRNFUEL].eta21      0.426899          NA       NA       NA
+[GRNFUEL].skew       1.123793          NA       NA       NA
+[GRNFUEL].shape      4.828847          NA       NA       NA
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[Joint]dcca1         0.022730          NA       NA       NA
+[Joint]dccb1         0.944897          NA       NA       NA
+[Joint]mshape       33.691892          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       9.2289
+Bayes        9.2611
+Shibata      9.2289
+Hannan-Quinn 9.2404
+
+
+Elapsed time : 9.574867 
+
+[1] "DCC-GARCH estimation based on GRNFUEL and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -17353.27
+Av.Log-Likelihood	:  -5.047 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNFUEL].mu        -0.002314          NA       NA       NA
+[GRNFUEL].omega      0.046831          NA       NA       NA
+[GRNFUEL].alpha1     0.083549          NA       NA       NA
+[GRNFUEL].beta1      0.926374          NA       NA       NA
+[GRNFUEL].eta11     -0.283735          NA       NA       NA
+[GRNFUEL].eta21      0.426899          NA       NA       NA
+[GRNFUEL].skew       1.123793          NA       NA       NA
+[GRNFUEL].shape      4.828847          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.005816          NA       NA       NA
+[Joint]dccb1         0.950445          NA       NA       NA
+[Joint]mshape       50.000000          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       10.105
+Bayes        10.135
+Shibata      10.105
+Hannan-Quinn 10.116
+
+
+Elapsed time : 10.12797 
+
+[1] "DCC-GARCH estimation based on GRNBIO and CL1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  18
+[VAR GARCH DCC UncQ]: [0+14+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -13496.84
+Av.Log-Likelihood	:  -3.926 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNBIO].mu          0.004430          NA       NA       NA
+[GRNBIO].omega       0.008588          NA       NA       NA
+[GRNBIO].alpha1     -0.053037          NA       NA       NA
+[GRNBIO].beta1       0.989931          NA       NA       NA
+[GRNBIO].gamma1      0.145184          NA       NA       NA
+[GRNBIO].skew        0.936896          NA       NA       NA
+[GRNBIO].shape       7.656646          NA       NA       NA
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[Joint]dcca1         0.018581          NA       NA       NA
+[Joint]dccb1         0.945790          NA       NA       NA
+[Joint]mshape       21.920991          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       7.8615
+Bayes        7.8918
+Shibata      7.8614
+Hannan-Quinn 7.8723
+
+
+Elapsed time : 8.1433 
+
+[1] "DCC-GARCH estimation based on GRNBIO and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15094.39
+Av.Log-Likelihood	:  -4.39 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[GRNBIO].mu          0.004430          NA       NA       NA
+[GRNBIO].omega       0.008588          NA       NA       NA
+[GRNBIO].alpha1     -0.053037          NA       NA       NA
+[GRNBIO].beta1       0.989931          NA       NA       NA
+[GRNBIO].gamma1      0.145184          NA       NA       NA
+[GRNBIO].skew        0.936896          NA       NA       NA
+[GRNBIO].shape       7.656646          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.003845          NA       NA       NA
+[Joint]dccb1         0.989157          NA       NA       NA
+[Joint]mshape       49.999999          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       8.7902
+Bayes        8.8188
+Shibata      8.7902
+Hannan-Quinn 8.8004
+
+
+Elapsed time : 7.775597 
+
+[1] "DCC-GARCH estimation based on CL1.Comdty and NG1.Comdty"
+
+*-------------------------------------------------*
+*                  Copula GARCH Fit               *
+*-------------------------------------------------*
+
+Distribution		:  mvt
+DCC Order			:  1 1
+Asymmetric			:  FALSE
+No. of Parameters	:  17
+[VAR GARCH DCC UncQ]: [0+13+3+1]
+No. of Series		:  2
+No. of Observations	:  3438
+Log-Likelihood		:  -15979.96
+Av.Log-Likelihood	:  -4.648 
+
+Optimal Parameters
+---------------------------------------------------
+                     Estimate  Std. Error  t value Pr(>|t|)
+[CL1.Comdty].mu      0.008602          NA       NA       NA
+[CL1.Comdty].omega   0.064046          NA       NA       NA
+[CL1.Comdty].alpha1  0.114481          NA       NA       NA
+[CL1.Comdty].beta1   0.885173          NA       NA       NA
+[CL1.Comdty].eta11   0.388457          NA       NA       NA
+[CL1.Comdty].skew    0.883803          NA       NA       NA
+[CL1.Comdty].shape   5.920688          NA       NA       NA
+[NG1.Comdty].mu      0.072747          NA       NA       NA
+[NG1.Comdty].omega   0.133635          NA       NA       NA
+[NG1.Comdty].alpha1  0.076259          NA       NA       NA
+[NG1.Comdty].beta1   0.914264          NA       NA       NA
+[NG1.Comdty].skew    1.093600          NA       NA       NA
+[NG1.Comdty].shape   7.417548          NA       NA       NA
+[Joint]dcca1         0.000000          NA       NA       NA
+[Joint]dccb1         0.793437          NA       NA       NA
+[Joint]mshape       27.350195          NA       NA       NA
+
+Information Criteria
+---------------------
+                   
+Akaike       9.3054
+Bayes        9.3340
+Shibata      9.3053
+Hannan-Quinn 9.3156
+
+
+Elapsed time : 8.152536 
+
+> H = fit$H_t
+> R = fit$R_t
+> 
+> uGARCH_table = NULL
+> for (i in 1:k) {
++   fit = ugarchfit(spec[[i]], Y[,i])
++   gt = GARCHtests(fit, lag=20)
++   uGARCH_table = rbind(uGARCH_table, gt$TABLE)
++ }
+> kable(uGARCH_table)
+
+
+|           |  SignBias|  WARCH(20)|       VaR|      CVaR|  VaR Dur.|
+|:----------|---------:|----------:|---------:|---------:|---------:|
+|statistics | 0.5337267| 17.4601725| 2.1569548| -740.1680| 1.1169591|
+|pvalues    | 0.5935652|  0.0489603| 0.1419257|    0.9740| 0.9151526|
+|statistics | 1.3846951|  4.9296188| 1.7369845| -734.3662| 1.1052632|
+|pvalues    | 0.1662357|  0.9586209| 0.1875214|    0.7210| 0.3873517|
+|statistics | 0.5270450|  7.2302645| 0.0938136| -672.1168| 0.9824561|
+|pvalues    | 0.5981964|  0.8022367| 0.7593838|    0.7090| 0.3727513|
+|statistics | 0.4121531|  4.9314805| 0.0073945| -687.1659| 1.0116959|
+|pvalues    | 0.6802530|  0.9585479| 0.9314732|    0.9610| 0.2046119|
+|statistics | 0.1283900|  3.0109352| 0.1021701| -696.1254| 1.0292398|
+|pvalues    | 0.8978478|  0.9969242| 0.7492409|    0.5970| 0.3324904|
+|statistics | 0.8729327|  0.1339828| 0.0049683| -681.1639| 1.0000000|
+|pvalues    | 0.3827608|  1.0000000| 0.9438069|    0.2240| 0.6759649|
+|statistics | 1.4670880|  7.0823666| 2.1569548| -740.1680| 1.1169591|
+|pvalues    | 0.1424437|  0.8159626| 0.1419257|    0.9950| 0.1983629|
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date,H[j,j,],type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',main=paste(NAMES[j]),tck=-.02,col=j,ylim=c(-0.2,14))
++   grid(NA,NULL)
++   for (i in 1:k) {
++     lines(date,H[j,i,],col=i)
++     abline(h=0,lty=3)
++   }
++   box()
++   legend("topleft",NAMES,fill=1:k,bty="n",cex=0.75,ncol=1)
++ }
+Error in x(x) : unused argument (x)
+> dca <- DCCgenizi(Y_complete, H, spec = spec, digit = 3)
+Error in DCCgenizi(Y_complete, H, spec = spec, digit = 3) : 
+  could not find function "DCCgenizi"
+> library(ConnectednessApproach)
+> dca <- DCCgenizi(Y_complete, H, spec = spec, digit = 3)
+Error in DCCgenizi(Y_complete, H, spec = spec, digit = 3) : 
+  could not find function "DCCgenizi"
+> par(mfcol = c(ceiling(k/2), 2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i', xlab = '', ylab = '', 
++        main = paste(NAMES[j]), tck = -0.02, col = j, ylim = c(min(H[j,,]), max(H[j,,])))
++   grid(NA, NULL)
++   
++   # Plot the off-diagonal covariance elements
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col = i)
++   }
++   abline(h = 0, lty = 3)
++   
++   box()
++   legend("topleft", legend = NAMES, fill = 1:k, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in x(x) : unused argument (x)
+> par(mfcol = c(ceiling(k/2), 2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   # Define ylim based on min and max over all covariances for this 'j' row
++   ylim_vals <- range(H[j, , ])
++   
++   plot(date, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i', xlab = '', ylab = '',
++        main = paste(NAMES[j]), tck = -0.02, col = j, ylim = ylim_vals)
++   
++   # grid() normally wants no arguments or colors; NA and NULL cause errors, so call it simply
++   grid()
++   
++   # Plot all covariances in row j with color coding
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col = i)
++   }
++   
++   abline(h = 0, lty = 3)
++   box()
++   
++   # Put legend outside the plotting area to avoid clutter; adjust as needed
++   legend("topright", legend = NAMES, fill = 1:k, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in x(x) : unused argument (x)
+> par(mfcol = c(ceiling(k/2), 2), oma = c(0,0,0,0) + 0.5, mar = c(1,1,1,1) + 0.5, mgp = c(1,0.4,0))
+> for(j in 1:k) {
++   ylim_vals <- range(H[j, , ])
++   plot(date, H[j, j, ], type='l', las=1, xaxs='i', yaxs='i', xlab='', ylab='',
++        main=paste(NAMES[j]), tck=-.02, col=j, ylim=ylim_vals)
++   grid()  # corrected function call, no arguments
++   for(i in 1:k){
++     lines(date, H[j, i, ], col=i)
++   }
++   abline(h=0, lty=3)
++   box()
++   legend("topleft", legend=NAMES, fill=1:k, bty="n", cex=0.75, ncol=1)
++ }
+Error in x(x) : unused argument (x)
+> par(mfcol = c(ceiling(k/2), 2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   # Dynamically set y-axis limits for each plot based on min and max values of all covariances for commodity j
++   ylim_vals <- range(H[j, , ])
++ 
++   plot(date, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i', xlab = '', ylab = '',
++        main = paste(NAMES[j]), tck = -0.02, col = j, ylim = ylim_vals)
++   
++   # Correct grid call with no arguments
++   grid()
++   
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col = i)
++   }
++   
++   abline(h = 0, lty = 3)
++   box()
++   legend("topleft", legend = NAMES, fill = 1:k, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in x(x) : unused argument (x)
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 1, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date,R[j,j,],type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',main=paste(NAMES[j]),tck=-.02,col=j,ylim=c(-0.1,1))
++   grid(NA,NULL)
++   for (i in 1:k) {
++     lines(date,R[j,i,],col=i)
++     abline(h=0,lty=3)
++     box()
++   }
++   legend("bottom",NAMES[-j],fill=c(1:k)[-j],bty="n",cex=0.75,ncol=k)
++ }
+Error in x(x) : unused argument (x)
+> dca = R2Correlations(R)
+  |===================================================================================================================| 100%
+> kable(dca$TABLE)
+
+
+|           |GRNSOLAR |GRNWIND |GRNGEO |GRNFUEL |GRNBIO |CL1.Comdty |NG1.Comdty |FROM        |
+|:----------|:--------|:-------|:------|:-------|:------|:----------|:----------|:-----------|
+|GRNSOLAR   |100.00   |9.69    |6.28   |11.12   |7.94   |1.56       |0.18       |36.76       |
+|GRNWIND    |10.20    |100.00  |4.00   |5.17    |4.37   |0.68       |0.05       |24.47       |
+|GRNGEO     |6.61     |4.04    |100.00 |4.43    |5.15   |1.06       |0.18       |21.46       |
+|GRNFUEL    |11.48    |5.01    |4.31   |100.00  |5.96   |1.74       |0.22       |28.73       |
+|GRNBIO     |8.11     |4.25    |5.02   |5.97    |100.00 |5.28       |0.12       |28.75       |
+|CL1.Comdty |1.71     |0.73    |1.11   |1.84    |5.69   |100.00     |1.41       |12.50       |
+|NG1.Comdty |0.23     |0.07    |0.20   |0.26    |0.15   |1.49       |100.00     |2.40        |
+|TO         |38.34    |23.79   |20.91  |28.79   |29.26  |11.81      |2.16       |155.07      |
+|Inc.Own    |138.34   |123.79  |120.91 |128.79  |129.26 |111.81     |102.16     |cTCI/TCI    |
+|NET        |1.58     |-0.67   |-0.55  |0.07    |0.51   |-0.69      |-0.24      |25.85/22.15 |
+|NPT        |6.00     |3.00    |2.00   |5.00    |4.00   |1.00       |0.00       |            |
+> r2c = apply(dca$CT,c(1,3),sum)-1
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 1, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   r2dd = matrix(0,ncol=k,nrow=t)
++   for (i in 1:t) {
++     ded = rep(0,k)
++     ded[j] = 1
++     r2dd[i,] = cumsum(dca$CT[j,,i]-ded)
++   }
++   plot(date,100*r2c[j,]*NA,type="l",las=1,xlab="",ylab="",ylim=c(0,100),xaxs="i",tck=-0.01,yaxs="i",main=NAMES[j])
++   grid(NA,NULL)
++   for (i in k:1) {
++     polygon(c(date, rev(date)), c(c(rep(0, t)), rev(100*r2dd[,i])), col=i, border=i)
++   }
++   box()
++   legend("topleft",NAMES[-j],fill=c(1:k)[-j],bty="n",cex=0.75,ncol=1)
++ }
+Error in matrix(0, ncol = k, nrow = t) : non-numeric matrix extent
+> par(mfcol = c(1,1), oma = c(0, 1, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> plot(date,dca$TCI*NA,type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',main='',tck=-.01, ylim=c(0,80))#c(max(c(0,min(TCI)-10)),max(TCI)+10))
+Error in seq.int(from, to, length.out = n) : 
+  'from' must be a finite number
+> grid(NA,NULL)
+Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...) : 
+  plot.new has not been called yet
+> polygon(c(date, rev(date)), c(c(rep(0, t)), rev(dca$TCI)), col=1, border=1)
+Error in xy.coords(x, y, setLab = FALSE) : 
+  cannot coerce type 'closure' to vector of type 'double'
+> box()
+Error in box() : plot.new has not been called yet
+> library(zoo)
+> library(xts)
+> library(PerformanceAnalytics)
+> library(rugarch)
+> library(rmgarch)
+> library(ConnectednessApproach)
+> library(e1071)
+> library(tseries)
+> library(FinTS)
+> df <- read.csv("Framexcel1.csv", stringsAsFactors = FALSE)
+Error in file(file, "rt") : cannot open the connection
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file 'Framexcel1.csv': No such file or directory
+> df$Date <- as.Date(df$Date)
+> df <- read.csv("/Users/Prem/Desktop/ACADS Sem-5/FRAM/Framexcel1.csv", stringsAsFactors = FALSE)
+> df$Date <- as.Date(df$Date)
+> returns_df <- df[-1, ]
+> for(col in colnames(df)[-1]){
++   returns_df[, col] <- 100 * (df[-1, col] - df[-nrow(df), col]) / df[-nrow(df), col]
++ }
+> Y <- zoo(returns_df[, -1], order.by = returns_df$Date)
+> NAMES <- colnames(Y)
+> k <- ncol(Y)
+> par(mfrow = c(ceiling(k/2), 2), oma=c(0,1,0,0)+0.5, mar=c(1,1,1,1)+0.5, mgp=c(1,0.4,0))
+> for(i in 1:k){
++   plot(index(Y), coredata(Y)[, i], type='l', col='steelblue4', main=NAMES[i],
++        xlab = '', ylab = "Returns (%)")
++   grid()
++   abline(h=0, lty=3)
++   box()
++ }
+> kable(SummaryStatistics(Y, nlag=20))
+The following statistics are used:
+
+          Skewness: D'Agostino, R.B. (1970). Transformation to Normality of the Null Distribution of G1. Biometrika, 57, 3, 679-681.
+
+          Excess Kurtosis: Anscombe, F.J., Glynn, W.J. (1983) Distribution of kurtosis statistic for normal statistics. Biometrika, 70, 1, 227-234
+
+          Normality test: Jarque, C. M., & Bera, A. K. (1980). Efficient tests for normality, homoscedasticity and serial independence of regression residuals. Economics Letters, 6(3), 255-259.
+
+          ERS unit-root test: Elliott, G., Rothenberg, T. J., & Stock, J. H. (1996). Efficient Tests for an Autoregressive Unit Root. Econometrica, 64(4), 813-836.
+
+          Weighted Portmanteau statistics: Fisher, T. J., & Gallagher, C. M. (2012). New weighted portmanteau statistics for time series goodness of fit testing. Journal of the American Statistical Association, 107(498), 777-787.
+
+          
+
+
+|            |GRNSOLAR    |GRNWIND     |GRNGEO       |GRNFUEL     |GRNBIO       |CL1.Comdty       |NG1.Comdty   |
+|:-----------|:-----------|:-----------|:------------|:-----------|:------------|:----------------|:------------|
+|Mean        |0.066*      |0.040       |0.020        |0.062       |0.006        |-0.059           |0.076        |
+|            |(0.063)     |(0.172)     |(0.475)      |(0.292)     |(0.858)      |(0.580)          |(0.219)      |
+|Variance    |4.303       |2.911       |2.823        |11.95       |3.42         |38.837           |13.015       |
+|Skewness    |-0.156***   |-0.182***   |0.703***     |0.699***    |-0.484***    |-36.779***       |0.821***     |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|Ex.Kurtosis |4.408***    |3.842***    |13.661***    |4.975***    |8.666***     |1737.942***      |12.386***    |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|JB          |2797.185*** |2133.491*** |27018.021*** |3825.973*** |10893.024*** |433453464.912*** |22364.259*** |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|ERS         |-9.615***   |-15.862***  |-25.315***   |-25.913***  |-13.112***   |-22.243***       |-15.624***   |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|Q(20)       |57.040***   |34.918***   |25.648***    |22.085***   |59.798***    |378.173***       |46.849***    |
+|            |(0.000)     |(0.000)     |(0.001)      |(0.007)     |(0.000)      |(0.000)          |(0.000)      |
+|Q2(20)      |1682.646*** |241.795***  |346.096***   |500.638***  |2822.416***  |99.959***        |307.950***   |
+|            |(0.000)     |(0.000)     |(0.000)      |(0.000)     |(0.000)      |(0.000)          |(0.000)      |
+|kendall     |GRNSOLAR    |GRNWIND     |GRNGEO       |GRNFUEL     |GRNBIO       |CL1.Comdty       |NG1.Comdty   |
+|GRNSOLAR    |1.000***    |0.269***    |0.246***     |0.313***    |0.267***     |0.119***         |0.010        |
+|GRNWIND     |0.269***    |1.000***    |0.192***     |0.224***    |0.195***     |0.058***         |-0.009       |
+|GRNGEO      |0.246***    |0.192***    |1.000***     |0.208***    |0.216***     |0.091***         |-0.004       |
+|GRNFUEL     |0.313***    |0.224***    |0.208***     |1.000***    |0.247***     |0.115***         |0.025**      |
+|GRNBIO      |0.267***    |0.195***    |0.216***     |0.247***    |1.000***     |0.201***         |0.019        |
+|CL1.Comdty  |0.119***    |0.058***    |0.091***     |0.115***    |0.201***     |1.000***         |0.082***     |
+|NG1.Comdty  |0.010       |-0.009      |-0.004       |0.025**     |0.019        |0.082***         |1.000***     |
+> kable(uGARCH_table)
+
+
+|           |  SignBias|  WARCH(20)|       VaR|      CVaR|  VaR Dur.|
+|:----------|---------:|----------:|---------:|---------:|---------:|
+|statistics | 0.5337267| 17.4601725| 2.1569548| -740.1680| 1.1169591|
+|pvalues    | 0.5935652|  0.0489603| 0.1419257|    0.9740| 0.9151526|
+|statistics | 1.3846951|  4.9296188| 1.7369845| -734.3662| 1.1052632|
+|pvalues    | 0.1662357|  0.9586209| 0.1875214|    0.7210| 0.3873517|
+|statistics | 0.5270450|  7.2302645| 0.0938136| -672.1168| 0.9824561|
+|pvalues    | 0.5981964|  0.8022367| 0.7593838|    0.7090| 0.3727513|
+|statistics | 0.4121531|  4.9314805| 0.0073945| -687.1659| 1.0116959|
+|pvalues    | 0.6802530|  0.9585479| 0.9314732|    0.9610| 0.2046119|
+|statistics | 0.1283900|  3.0109352| 0.1021701| -696.1254| 1.0292398|
+|pvalues    | 0.8978478|  0.9969242| 0.7492409|    0.5970| 0.3324904|
+|statistics | 0.8729327|  0.1339828| 0.0049683| -681.1639| 1.0000000|
+|pvalues    | 0.3827608|  1.0000000| 0.9438069|    0.2240| 0.6759649|
+|statistics | 1.4670880|  7.0823666| 2.1569548| -740.1680| 1.1169591|
+|pvalues    | 0.1424437|  0.8159626| 0.1419257|    0.9950| 0.1983629|
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date,H[j,j,],type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',main=paste(NAMES[j]),tck=-.02,col=j,ylim=c(-0.2,14))
++   grid(NA,NULL)
++   for (i in 1:k) {
++     lines(date,H[j,i,],col=i)
++     abline(h=0,lty=3)
++   }
++   box()
++   legend("topleft",NAMES,fill=1:k,bty="n",cex=0.75,ncol=1)
++ }
+Error in x(x) : unused argument (x)
+> par(mfcol = c(ceiling(k/2), 2), oma = c(0, 0, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   # Set y-axis limits dynamically if you want, or keep fixed as in original
++   ylim_vals <- c(-0.2, 14)
++   
++   plot(date, H[j, j, ], type='l', las=1, xaxs='i', yaxs='i', xlab='', ylab='',
++        main=paste(NAMES[j]), tck=-0.02, col=j, ylim=ylim_vals)
++   
++   # Add grid with no arguments (required for the error fix)
++   grid()
++   
++   # Add all lines for the j-th row covariance elements
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col=i)
++   }
++   
++   # Draw horizontal line and box around the plot
++   abline(h=0, lty=3)
++   box()
++   
++   # Add legend once per plot at top left position
++   legend("topleft", legend=NAMES, fill=1:k, bty="n", cex=0.75, ncol=1)
++ }
+Error in x(x) : unused argument (x)
+> k <- 7  # Number of commodities
+> 
+> par(mfcol = c(ceiling(k/2), 2), 
++     oma = c(0, 0, 0, 0) + 0.5, 
++     mar = c(1, 1, 1, 1) + 0.5, 
++     mgp = c(1, 0.4, 0))
+> 
+> # Suppose 'date', 'H', and 'NAMES' are your vectors / arrays for dates, conditional covariances, and names
+> 
+> for (j in 1:k) {
++   # Compute y-axis limits based on the min and max over all covariance series related to asset j
++   ylim_vals <- range(H[j, , ])
++   
++   plot(date, H[j, j, ], type = "l", 
++        las = 1, xaxs = "i", yaxs = "i", xlab = "", ylab = "", 
++        main = paste(NAMES[j]), tck = -0.02, col = j, ylim = ylim_vals)
++   
++   # Call grid without extra arguments (fixed from error)
++   grid()
++   
++   # Plot all covariance lines for asset j
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col = i)
++   }
++   
++   abline(h = 0, lty = 3)
++   box()
++   
++   legend("topleft", legend = NAMES, fill = 1:k, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in x(x) : unused argument (x)
+> 
+> par(mfcol = c(ceiling(k/2), 2),
++     oma = rep(0.5, 4),
++     mar = rep(1.5, 4),
++     mgp = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   plot(date, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i',
++        xlab = '', ylab = '', main = NAMES[j],
++        tck = -0.02, col = j, ylim = c(-0.2, 14))
++   grid()                       # <- fixed here
++   for (i in 1:k) {
++     lines(date, H[j, i, ], col = i)
++   }
++   abline(h = 0, lty = 3)
++   box()
++   legend("topleft", legend = NAMES, col = 1:k, lty = 1, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in x(x) : unused argument (x)
+> is.function(date)
+[1] TRUE
+> if (exists("Date", envir = .GlobalEnv)) {
++   rm(Date, envir = .GlobalEnv)
++   message("Removed user-defined object 'Date' from global env.")
++ }
+> dates <- as.Date(df$Date)
+> 
+> # If your dates are in other formats, try multiple common formats:
+> dates <- as.Date(df$Date, tryFormats = c("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"))
+> class(dates)
+[1] "Date"
+> head(dates)
+[1] "2010-10-13" "2010-10-14" "2010-10-15" "2010-10-18" "2010-10-19" "2010-10-20"
+> sum(is.na(dates))
+[1] 0
+> par(mfcol = c(ceiling(k/2), 2),
++     oma = rep(0.5, 4),
++     mar  = rep(1.5, 4),
++     mgp  = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   plot(dates, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i',
++        xlab = '', ylab = '', main = NAMES[j],
++        tck = -0.02, col = j, ylim = c(-0.2, 14))
++   graphics::grid()   # safe base-graphics grid
++   for (i in 1:k) {
++     lines(dates, H[j, i, ], col = i)
++   }
++   abline(h = 0, lty = 3)
++   box()
++   legend("topleft", legend = NAMES, col = 1:k, lty = 1, bty = "n", cex = 0.75, ncol = 1)
++ }
+Error in xy.coords(x, y, xlabel, ylabel, log) : 
+  'x' and 'y' lengths differ
+> 
+> # your date vector (the one you parsed earlier)
+> length(dates)
+[1] 3439
+> head(dates)
+[1] "2010-10-13" "2010-10-14" "2010-10-15" "2010-10-18" "2010-10-19" "2010-10-20"
+> 
+> # your H object
+> dim(H)            # expected: c(k, k, T) where T is number of time points
+[1]    7    7 3438
+> Tdim <- if (!is.null(dim(H))) dim(H)[3] else length(H[1,1,]) # safe fallback
+> Tdim
+[1] 3438
+> length(H[1,1,])   # should equal Tdim
+[1] 3438
+> 
+> if (length(dates) == Tdim) {
++   dates_plot <- dates                       # perfect match
++ } else if (length(dates) == Tdim + 1) {
++   # Typical case when H is built from returns but dates are price-dates
++   # Use dates[-1] so dates_plot lines up with returns (first return uses date[2])
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align returns (dates were 1 longer than H).")
++ } else if (length(dates) + 1 == Tdim) {
++   # less common: maybe H has one extra timestamp
++   dates_plot <- c(NA, dates)   # not ideal — better to understand why
++   warning("H has one more row than dates. Check data alignment.")
++ } else {
++   stop("Length mismatch: length(dates) = ", length(dates),
++        " but H third-dimension = ", Tdim,
++        ". You must align them (check how you computed returns/prices).")
++ }
+Using dates[-1] to align returns (dates were 1 longer than H).
+> # final sanity check
+> stopifnot(length(dates_plot) == Tdim)
+> 
+> par(mfcol = c(ceiling(k/2), 2),
++     oma = rep(0.5, 4),
++     mar  = rep(1.5, 4),
++     mgp  = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   plot(dates_plot, H[j, j, ], type = 'l', las = 1, xaxs = 'i', yaxs = 'i',
++        xlab = '', ylab = '', main = NAMES[j],
++        tck = -0.02, col = j, ylim = c(-0.2, 14))
++   graphics::grid()
++   for (i in 1:k) {
++     lines(dates_plot, H[j, i, ], col = i)
++   }
++   abline(h = 0, lty = 3)
++   box()
++   legend("topleft", legend = NAMES, col = 1:k, lty = 1, bty = "n", cex = 0.75, ncol = 1)
++ }
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 1, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date,R[j,j,],type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',main=paste(NAMES[j]),tck=-.02,col=j,ylim=c(-0.1,1))
++   grid(NA,NULL)
++   for (i in 1:k) {
++     lines(date,R[j,i,],col=i)
++     abline(h=0,lty=3)
++     box()
++   }
++   legend("bottom",NAMES[-j],fill=c(1:k)[-j],bty="n",cex=0.75,ncol=k)
++ }
+Error in x(x) : unused argument (x)
+> # --- Safety checks & align dates -------------------------------------------
+> # Assumes:
+> # - you have a 3D array R of size [k, k, T]
+> # - you have a Date vector 'dates' (parsed earlier) or 'dates_returns' already aligned
+> # Adjust these names if your variables are different.
+> 
+> if (!exists("R") || length(dim(R)) != 3) stop("I can't find a 3D array 'R' (k x k x T).")
+> k <- dim(R)[1]
+> if (dim(R)[2] != k) stop("R must be square in the first two dimensions.")
+> 
+> # choose which dates vector corresponds to the time dimension of R
+> # (common: if R built from returns -> use dates[-1]; if from prices -> use dates)
+> Tlen <- dim(R)[3]
+> if (exists("dates") && length(dates) == Tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == Tlen + 1) {
++   dates_plot <- dates[-1]   # typical when R built from returns
++   message("Using dates[-1] to align with R (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(R)[3] = ", Tlen, ". Align your dates with R.")
++ }
+Using dates[-1] to align with R (returns).
+> stopifnot(length(dates_plot) == Tlen)
+> 
+> # --- plotting parameters ---------------------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma   = c(0, 1, 0, 0) + 0.5,
++     mar   = c(1, 1, 1, 1) + 0.5,
++     mgp   = c(1, 0.4, 0))
+> 
+> # automatic y-limits (you can set a manual ylim if you prefer)
+> ymin <- min(R, na.rm = TRUE)
+> ymax <- max(R, na.rm = TRUE)
+> # if you want the specific ylim from your original: ylim = c(-0.1, 1)
+> 
+> # color palette for up to k series (you can supply a custom palette)
+> cols <- 1:k   # integer colors, or replace with a color vector: cols <- c(...)
+> 
+> # --- loop to draw subplots -------------------------------------------------
+> for (j in 1:k) {
++   plot(dates_plot, R[j, j, ], type = "l", las = 1, xaxs = "i", yaxs = "i",
++        xlab = "", ylab = "", main = paste(NAMES[j]),
++        tck = -0.02, col = cols[j], ylim = c(ymin, ymax))
++   graphics::grid()                # safe base-graphics grid
++   for (i in 1:k) {
++     lines(dates_plot, R[j, i, ], col = cols[i], lty = 1)
++   }
++   abline(h = 0, lty = 3)          # draw horizontal zero line once
++   box()                           # draw the box once
++   # legend: exclude the diagonal series j
++   legend_cols <- cols[-j]
++   legend_names <- NAMES[-j]
++   # put legend at bottom, allow it to span multiple columns if many series
++   legend("bottom", legend = legend_names, col = legend_cols, lty = 1,
++          bty = "n", cex = 0.75, ncol = min(k, 3))
++ }
+> 
+> dca = R2Correlations(R)
+  |===================================================================================================================| 100%
+> kable(dca$TABLE)
+
+
+|           |GRNSOLAR |GRNWIND |GRNGEO |GRNFUEL |GRNBIO |CL1.Comdty |NG1.Comdty |FROM        |
+|:----------|:--------|:-------|:------|:-------|:------|:----------|:----------|:-----------|
+|GRNSOLAR   |100.00   |9.69    |6.28   |11.12   |7.94   |1.56       |0.18       |36.76       |
+|GRNWIND    |10.20    |100.00  |4.00   |5.17    |4.37   |0.68       |0.05       |24.47       |
+|GRNGEO     |6.61     |4.04    |100.00 |4.43    |5.15   |1.06       |0.18       |21.46       |
+|GRNFUEL    |11.48    |5.01    |4.31   |100.00  |5.96   |1.74       |0.22       |28.73       |
+|GRNBIO     |8.11     |4.25    |5.02   |5.97    |100.00 |5.28       |0.12       |28.75       |
+|CL1.Comdty |1.71     |0.73    |1.11   |1.84    |5.69   |100.00     |1.41       |12.50       |
+|NG1.Comdty |0.23     |0.07    |0.20   |0.26    |0.15   |1.49       |100.00     |2.40        |
+|TO         |38.34    |23.79   |20.91  |28.79   |29.26  |11.81      |2.16       |155.07      |
+|Inc.Own    |138.34   |123.79  |120.91 |128.79  |129.26 |111.81     |102.16     |cTCI/TCI    |
+|NET        |1.58     |-0.67   |-0.55  |0.07    |0.51   |-0.69      |-0.24      |25.85/22.15 |
+|NPT        |6.00     |3.00    |2.00   |5.00    |4.00   |1.00       |0.00       |            |
+> # ------------------- Safety checks and preliminaries ------------------------
+> # dca$CT expected shape: [k, k, t]  (rows: from, cols: to, 3rd dim: time)
+> if (!exists("dca") || is.null(dca$CT)) stop("dca$CT not found. Compute dca first.")
+> dimCT <- dim(dca$CT)
+> if (length(dimCT) != 3) stop("dca$CT must be a 3D array: [k, k, t].")
+> 
+> k <- dimCT[1]
+> if (dimCT[2] != k) stop("dca$CT must be square in first two dims.")
+> tlen <- dimCT[3]
+> 
+> # Align dates: prefer 'dates' or 'dates_returns' depending on how dca was computed
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with dca$CT (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(dca$CT)[3] = ", tlen, ". Align your dates with dca$CT.")
++ }
+Using dates[-1] to align with dca$CT (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # choose colors (you can replace this with any color vector of length >= k)
+> cols <- 1:k   # or use: cols <- RColorBrewer::brewer.pal(max(3,k),"Set2")
+> 
+> # ------------------- compute r2c (row sums minus 1) -------------------------
+> # replicates original: r2c = apply(dca$CT, c(1,3), sum) - 1
+> r2c <- apply(dca$CT, c(1, 3), FUN = function(x) sum(x)) - 1
+> # r2c has dims [k, t] (rows = j, cols = time). Transpose if needed.
+> # Check shape
+> if (!all(dim(r2c) == c(k, tlen))) r2c <- matrix(r2c, nrow = k, ncol = tlen, byrow = FALSE)
+> 
+> # ------------------- plotting ------------------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma = c(0, 1, 0, 0) + 0.5,
++     mar = c(1, 1, 1, 1) + 0.5,
++     mgp = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   # build r2dd: matrix t x k where row i is the cumulative sum for time i across columns
++   r2dd <- matrix(0, ncol = k, nrow = tlen)  # rows: time, cols: counterparties
++   for (i in 1:tlen) {
++     ded <- rep(0, k)
++     ded[j] <- 1
++     # ensure dca$CT[j,,i] is numeric vector length k
++     vecji <- as.numeric(dca$CT[j, , i])
++     r2dd[i, ] <- cumsum(vecji - ded)
++   }
++ 
++   # prepare empty plot using same x-range and y-range
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1,
++        xlab = "", ylab = "", ylim = c(0, 100),
++        xaxs = "i", yaxs = "i", tck = -0.01, main = NAMES[j])
++ 
++   graphics::grid()
++ 
++   # draw stacked polygons from bottom (1) to top (k) so stacking looks consistent
++   # we iterate in reverse if we want top series on top visually; keep as original k:1
++   for (i in k:1) {
++     top_y <- 100 * r2dd[, i]        # % scale
++     bot_y <- rep(0, tlen)          # baseline for each polygon
++     x_poly <- c(as.numeric(dates_plot), rev(as.numeric(dates_plot)))
++     y_poly <- c(bot_y, rev(top_y))
++ 
++     # ensure no NA mismatches
++     if (length(x_poly) != length(y_poly)) stop("polygon vectors lengths mismatch.")
++ 
++     polygon(x_poly, y_poly, col = cols[i], border = cols[i])
++   }
++ 
++   box()
++   # legend: exclude diagonal (j), show others with fil
++ 
++ 
++ l = cols[-j], bty = "n", cex = 0.75, ncol = 1)
+Error: unexpected ',' in:
+"
+l = cols[-j],"
+> }
+Error: unexpected '}' in "}"
+> # ------------------- Safety checks and preliminaries ------------------------
+> # dca$CT expected shape: [k, k, t]  (rows: from, cols: to, 3rd dim: time)
+> if (!exists("dca") || is.null(dca$CT)) stop("dca$CT not found. Compute dca first.")
+> dimCT <- dim(dca$CT)
+> if (length(dimCT) != 3) stop("dca$CT must be a 3D array: [k, k, t].")
+> 
+> k <- dimCT[1]
+> if (dimCT[2] != k) stop("dca$CT must be square in first two dims.")
+> tlen <- dimCT[3]
+> 
+> # Align dates: prefer 'dates' or 'dates_returns' depending on how dca was computed
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with dca$CT (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(dca$CT)[3] = ", tlen, ". Align your dates with dca$CT.")
++ }
+Using dates[-1] to align with dca$CT (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # choose colors (you can replace this with any color vector of length >= k)
+> cols <- 1:k   # or use: cols <- RColorBrewer::brewer.pal(max(3,k),"Set2")
+> 
+> # ------------------- compute r2c (row sums minus 1) -------------------------
+> # replicates original: r2c = apply(dca$CT, c(1,3), sum) - 1
+> r2c <- apply(dca$CT, c(1, 3), FUN = function(x) sum(x)) - 1
+> # r2c has dims [k, t] (rows = j, cols = time). Transpose if needed.
+> # Check shape
+> if (!all(dim(r2c) == c(k, tlen))) r2c <- matrix(r2c, nrow = k, ncol = tlen, byrow = FALSE)
+> 
+> # ------------------- plotting ------------------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma = c(0, 1, 0, 0) + 0.5,
++     mar = c(1, 1, 1, 1) + 0.5,
++     mgp = c(1, 0.4, 0))
+> 
+> for (j in 1:k) {
++   # build r2dd: matrix t x k where row i is the cumulative sum for time i across columns
++   r2dd <- matrix(0, ncol = k, nrow = tlen)  # rows: time, cols: counterparties
++   for (i in 1:tlen) {
++     ded <- rep(0, k)
++     ded[j] <- 1
++     # ensure dca$CT[j,,i] is numeric vector length k
++     vecji <- as.numeric(dca$CT[j, , i])
++     r2dd[i, ] <- cumsum(vecji - ded)
++   }
++ 
++   # prepare empty plot using same x-range and y-range
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1,
++        xlab = "", ylab = "", ylim = c(0, 100),
++        xaxs = "i", yaxs = "i", tck = -0.01, main = NAMES[j])
++ 
++   graphics::grid()
++ 
++   # draw stacked polygons from bottom (1) to top (k) so stacking looks consistent
++   # we iterate in reverse if we want top series on top visually; keep as original k:1
++   for (i in k:1) {
++     top_y <- 100 * r2dd[, i]        # % scale
++     bot_y <- rep(0, tlen)          # baseline for each polygon
++     x_poly <- c(as.numeric(dates_plot), rev(as.numeric(dates_plot)))
++     y_poly <- c(bot_y, rev(top_y))
++ 
++     # ensure no NA mismatches
++     if (length(x_poly) != length(y_poly)) stop("polygon vectors lengths mismatch.")
++ 
++     polygon(x_poly, y_poly, col = cols[i], border = cols[i])
++   }
++ 
++   box()
++   # legend: exclude diagonal (j), show others with fills
++   legend("topleft", legend = NAMES[-j], fill = cols[-j], bty = "n", cex = 0.75, ncol = 1)
++ }
+> 
+> # ---------------- Safety checks / prepare dates_plot -------------------------
+> # Expect dca$TCI to be a numeric vector of length tlen (time)
+> if (!exists("dca") || is.null(dca$TCI)) stop("dca$TCI not found. Compute dca first.")
+> tlen <- if (!is.null(dim(dca$CT))) dim(dca$CT)[3] else length(dca$TCI)
+> 
+> # Align dates: prefer 'dates' or 'dates_returns' depending on how dca was computed
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with dca$TCI (returns).")
++ } else if (length(dca$TCI) == tlen && !exists("dates")) {
++   stop("No 'dates' object found. Please parse your CSV dates first and provide 'dates'.")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but length(dca$TCI) = ", length(dca$TCI), ". Align your dates with dca$TCI.")
++ }
+Using dates[-1] to align with dca$TCI (returns).
+> stopifnot(length(dates_plot) == length(dca$TCI))
+> 
+> # ---------------- Plot TCI (robust) ----------------------------------------
+> par(mfcol = c(1, 1),
++     oma  = c(0, 1, 0, 0) + 0.5,
++     mar  = c(1, 1, 1, 1) + 0.5,
++     mgp  = c(1, 0.4, 0))
+> 
+> # prepare numeric x for polygon (polygon wants numeric vectors)
+> xnum <- as.numeric(dates_plot)
+> y_tci <- as.numeric(dca$TCI)   # ensure numeric
+> 
+> # optional: handle NAs in TCI (simple approach: replace leading/trailing NA with 0 or interpolate)
+> if (any(is.na(y_tci))) {
++   warning("dca$TCI contains NA values. Replacing NA with 0 for plotting. Consider imputing/interpolating instead.")
++   y_tci[is.na(y_tci)] <- 0
++ }
+> 
+> # set ylim (you used c(0,80) originally)
+> ylim_plot <- c(0, 80)
+> 
+> # empty plot (type = 'n') to set axes and limits
+> plot(dates_plot, rep(NA, length(xnum)), type = "n", las = 1,
++      xlab = "", ylab = "", main = "", tck = -0.01,
++      xaxs = "i", yaxs = "i", ylim = ylim_plot)
+> 
+> graphics::grid()
+> 
+> # polygon: from baseline 0 up to TCI
+> x_poly <- c(xnum, rev(xnum))
+> y_poly <- c(rep(0, length(xnum)), rev(y_tci))
+> 
+> # safety check
+> if (length(x_poly) != length(y_poly)) stop("Polygon x and y lengths differ.")
+> 
+> polygon(x_poly, y_poly, col = 1, border = 1)
+> 
+> box()
+> 
+> # ---------------- Safety checks / prepare dates_plot -------------------------
+> if (!exists("dca") || is.null(dca$NET)) stop("dca$NET not found. Compute dca first.")
+> dimNET <- dim(dca$NET)
+> # Expect dca$NET to be [t, k] (rows: time, cols: series)
+> if (is.null(dimNET) || length(dimNET) != 2) stop("dca$NET must be a 2D matrix [time x k].")
+> 
+> tlen <- dimNET[1]
+> k    <- dimNET[2]
+> 
+> # Align dates: prefer 'dates' or 'dates_returns' depending on how NET was computed
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with dca$NET (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ",
++        ifelse(exists("dates"), length(dates), "NULL"),
++        " but nrow(dca$NET) = ", tlen, ". Align your dates with dca$NET.")
++ }
+Using dates[-1] to align with dca$NET (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # ---------------- Plot parameters ------------------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma  = c(0, 0, 0, 0) + 0.5,
++     mar  = c(1, 1, 1, 1) + 0.5,
++     mgp  = c(1, 0.4, 0))
+> 
+> # choose a color for the polygon fill / border (replace with a palette if you like)
+> fill_col <- 1
+> border_col <- 1
+> 
+> # ----------------- loop to plot NET series as polygon (area) -------------------
+> for (i in 1:k) {
++   # extract time series and ensure numeric
++   y_net <- as.numeric(dca$NET[, i])
++ 
++   # handle NAs: simple strategy = replace NA with 0 for plotting (or interpolate if preferred)
++   if (any(is.na(y_net))) {
++     warning(sprintf("dca$NET[, %d] contains NA values. Replacing NA with 0 for plotting.", i))
++     y_net[is.na(y_net)] <- 0
++   }
++ 
++   # empty plot to set axes and limits (use provided ylim or auto-calc)
++   ylim_plot <- c(-20, 20)  # keep original limits; change if needed
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1,
++        xlab = "", ylab = "", main = paste("NET", NAMES[i]),
++        xaxs = "i", yaxs = "i", tck = -0.025, ylim = ylim_plot)
++ 
++   graphics::grid()
++ 
++   # polygon from baseline 0 up to y_net. polygon accepts numeric x values
++   xnum <- as.numeric(dates_plot)
++   x_poly <- c(xnum, rev(xnum))
++   y_poly <- c(rep(0, tlen), rev(y_net))
++ 
++   if (length(x_poly) != length(y_poly)) stop("Polygon x and y lengths differ.")
++ 
++   polygon(x_poly, y_poly, col = fill_col, border = border_col)
++ 
++   abline(h = 0, lty = 3)
++   box()
++ }
+> 
+> method = "cumsum"
+> statistics = "Fisher"
+> metric = "StdDev"
+> hr = HedgeRatio(Y/100, H, statistics=statistics, method=method, metric=metric, digit=3)
+> kable(hr$TABLE)
+
+
+|                      |Mean   |Std.Dev. |5%     |95%   |HE     |p-value |Return |Std.Dev |SR     |
+|:---------------------|:------|:--------|:------|:-----|:------|:-------|:------|:-------|:------|
+|GRNSOLAR/GRNWIND      |0.466  |0.176    |0.215  |0.823 |0.192  |0.997   |0.085  |0.296   |0.288  |
+|GRNSOLAR/GRNGEO       |0.456  |0.210    |0.174  |0.840 |0.171  |0.938   |0.122  |0.300   |0.406  |
+|GRNSOLAR/GRNFUEL      |0.271  |0.094    |0.137  |0.439 |0.227  |0.875   |0.096  |0.290   |0.330  |
+|GRNSOLAR/GRNBIO       |0.504  |0.229    |0.226  |0.972 |0.220  |0.830   |0.113  |0.291   |0.387  |
+|GRNSOLAR/CL1.Comdty   |0.156  |0.110    |0.003  |0.370 |0.043  |0.851   |0.120  |0.322   |0.372  |
+|GRNSOLAR/NG1.Comdty   |0.000  |0.030    |-0.055 |0.044 |0.002  |0.000   |0.120  |0.329   |0.364  |
+|GRNWIND/GRNSOLAR      |0.351  |0.152    |0.122  |0.604 |0.198  |0.953   |0.028  |0.243   |0.116  |
+|GRNWIND/GRNGEO        |0.334  |0.147    |0.158  |0.626 |0.100  |0.938   |0.061  |0.257   |0.237  |
+|GRNWIND/GRNFUEL       |0.164  |0.079    |0.065  |0.318 |0.147  |0.875   |0.066  |0.250   |0.262  |
+|GRNWIND/GRNBIO        |0.337  |0.168    |0.148  |0.699 |0.117  |0.830   |0.058  |0.254   |0.229  |
+|GRNWIND/CL1.Comdty    |0.060  |0.081    |-0.069 |0.220 |-0.002 |0.851   |0.070  |0.271   |0.260  |
+|GRNWIND/NG1.Comdty    |-0.005 |0.008    |-0.019 |0.008 |0.000  |0.000   |0.066  |0.271   |0.245  |
+|GRNGEO/GRNSOLAR       |0.270  |0.128    |0.091  |0.509 |0.172  |0.953   |-0.046 |0.243   |-0.189 |
+|GRNGEO/GRNWIND        |0.264  |0.107    |0.132  |0.485 |0.104  |0.997   |-0.013 |0.252   |-0.050 |
+|GRNGEO/GRNFUEL        |0.138  |0.076    |0.031  |0.276 |0.135  |0.875   |-0.002 |0.248   |-0.007 |
+|GRNGEO/GRNBIO         |0.311  |0.139    |0.124  |0.572 |0.149  |0.830   |0.012  |0.246   |0.047  |
+|GRNGEO/CL1.Comdty     |0.096  |0.070    |-0.005 |0.222 |-0.075 |0.851   |0.022  |0.277   |0.080  |
+|GRNGEO/NG1.Comdty     |-0.006 |0.021    |-0.039 |0.028 |0.003  |0.000   |0.017  |0.266   |0.065  |
+|GRNFUEL/GRNSOLAR      |0.756  |0.289    |0.388  |1.282 |0.224  |0.953   |-0.099 |0.483   |-0.206 |
+|GRNFUEL/GRNWIND       |0.627  |0.308    |0.245  |1.211 |0.133  |0.997   |-0.035 |0.511   |-0.068 |
+|GRNFUEL/GRNGEO        |0.617  |0.294    |0.170  |1.145 |0.116  |0.938   |0.013  |0.516   |0.024  |
+|GRNFUEL/GRNBIO        |0.715  |0.308    |0.278  |1.261 |0.163  |0.830   |0.003  |0.502   |0.007  |
+|GRNFUEL/CL1.Comdty    |0.268  |0.168    |0.048  |0.552 |-0.002 |0.851   |0.018  |0.549   |0.032  |
+|GRNFUEL/NG1.Comdty    |0.052  |0.030    |0.015  |0.101 |0.005  |0.000   |-0.003 |0.547   |-0.006 |
+|GRNBIO/GRNSOLAR       |0.351  |0.165    |0.133  |0.670 |0.257  |0.953   |-0.084 |0.253   |-0.331 |
+|GRNBIO/GRNWIND        |0.312  |0.134    |0.129  |0.542 |0.144  |0.997   |-0.062 |0.272   |-0.227 |
+|GRNBIO/GRNGEO         |0.359  |0.152    |0.155  |0.625 |0.148  |0.938   |-0.033 |0.271   |-0.122 |
+|GRNBIO/GRNFUEL        |0.185  |0.088    |0.054  |0.335 |0.197  |0.875   |-0.049 |0.263   |-0.188 |
+|GRNBIO/CL1.Comdty     |0.218  |0.079    |0.097  |0.359 |-0.094 |0.851   |-0.005 |0.307   |-0.017 |
+|GRNBIO/NG1.Comdty     |0.019  |0.022    |-0.010 |0.055 |0.007  |0.000   |-0.035 |0.292   |-0.118 |
+|CL1.Comdty/GRNSOLAR   |0.204  |0.214    |0.002  |0.522 |0.038  |0.953   |-0.053 |0.970   |-0.055 |
+|CL1.Comdty/GRNWIND    |0.131  |0.215    |-0.061 |0.395 |0.007  |0.997   |0.018  |0.986   |0.019  |
+|CL1.Comdty/GRNGEO     |0.221  |0.227    |-0.005 |0.470 |0.022  |0.938   |-0.022 |0.978   |-0.022 |
+|CL1.Comdty/GRNFUEL    |0.135  |0.136    |0.013  |0.323 |0.026  |0.875   |-0.028 |0.976   |-0.029 |
+|CL1.Comdty/GRNBIO     |0.389  |0.179    |0.174  |0.657 |0.011  |0.830   |0.009  |0.984   |0.009  |
+|CL1.Comdty/NG1.Comdty |0.094  |0.085    |0.041  |0.159 |0.006  |0.000   |-0.002 |0.986   |-0.002 |
+|NG1.Comdty/GRNSOLAR   |0.003  |0.078    |-0.127 |0.134 |0.001  |0.953   |0.028  |0.572   |0.049  |
+|NG1.Comdty/GRNWIND    |-0.018 |0.038    |-0.082 |0.037 |0.000  |0.997   |0.031  |0.573   |0.054  |
+|NG1.Comdty/GRNGEO     |-0.033 |0.098    |-0.201 |0.111 |0.003  |0.938   |0.035  |0.572   |0.062  |
+|NG1.Comdty/GRNFUEL    |0.052  |0.030    |0.013  |0.111 |0.004  |0.875   |0.027  |0.572   |0.048  |
+|NG1.Comdty/GRNBIO     |0.051  |0.078    |-0.075 |0.174 |0.001  |0.830   |0.028  |0.572   |0.049  |
+|NG1.Comdty/CL1.Comdty |0.205  |0.100    |0.096  |0.368 |-0.005 |0.851   |0.031  |0.574   |0.053  |
+> mhp = MultivariateHedgingPortfolio(Y/100, H, statistics=statistics, method=method, digit=3)
+> kable(mhp$TABLE)
+
+
+|                      |Mean   |Std.Dev. |5%     |95%   |HE    |p-value |Return |Risk  |SR     |
+|:---------------------|:------|:--------|:------|:-----|:-----|:-------|:------|:-----|:------|
+|GRNSOLAR/GRNWIND      |0.254  |0.159    |0.039  |0.550 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNSOLAR/GRNGEO       |0.182  |0.147    |-0.056 |0.444 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNSOLAR/GRNFUEL      |0.156  |0.062    |0.060  |0.261 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNSOLAR/GRNBIO       |0.225  |0.126    |0.046  |0.450 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNSOLAR/CL1.Comdty   |0.035  |0.086    |-0.095 |0.191 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNSOLAR/NG1.Comdty   |-0.013 |0.026    |-0.064 |0.027 |0.348 |0.000   |0.077  |0.266 |0.290  |
+|GRNWIND/GRNSOLAR      |0.234  |0.152    |0.028  |0.496 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNWIND/GRNGEO        |0.135  |0.079    |0.013  |0.273 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNWIND/GRNFUEL       |0.064  |0.061    |-0.010 |0.190 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNWIND/GRNBIO        |0.128  |0.080    |0.013  |0.274 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNWIND/CL1.Comdty    |-0.034 |0.070    |-0.175 |0.061 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNWIND/NG1.Comdty    |-0.006 |0.014    |-0.026 |0.023 |0.261 |0.000   |0.051  |0.233 |0.219  |
+|GRNGEO/GRNSOLAR       |0.139  |0.114    |-0.042 |0.345 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNGEO/GRNWIND        |0.112  |0.064    |0.012  |0.228 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNGEO/GRNFUEL        |0.054  |0.057    |-0.032 |0.161 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNGEO/GRNBIO         |0.153  |0.092    |0.046  |0.323 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNGEO/CL1.Comdty     |0.024  |0.052    |-0.058 |0.108 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNGEO/NG1.Comdty     |-0.013 |0.019    |-0.044 |0.014 |0.205 |0.000   |-0.020 |0.238 |-0.083 |
+|GRNFUEL/GRNSOLAR      |0.512  |0.258    |0.179  |1.016 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNFUEL/GRNWIND       |0.239  |0.218    |-0.034 |0.648 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNFUEL/GRNGEO        |0.207  |0.238    |-0.172 |0.616 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNFUEL/GRNBIO        |0.298  |0.224    |-0.004 |0.696 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNFUEL/CL1.Comdty    |0.088  |0.130    |-0.108 |0.312 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNFUEL/NG1.Comdty    |0.042  |0.030    |0.004  |0.098 |0.303 |0.000   |-0.079 |0.458 |-0.172 |
+|GRNBIO/GRNSOLAR       |0.188  |0.123    |0.031  |0.419 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|GRNBIO/GRNWIND        |0.120  |0.080    |0.009  |0.272 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|GRNBIO/GRNGEO         |0.160  |0.088    |0.052  |0.330 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|GRNBIO/GRNFUEL        |0.076  |0.057    |-0.001 |0.183 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|GRNBIO/CL1.Comdty     |0.149  |0.056    |0.065  |0.249 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|GRNBIO/NG1.Comdty     |0.002  |0.014    |-0.021 |0.026 |0.269 |0.000   |-0.061 |0.251 |-0.245 |
+|CL1.Comdty/GRNSOLAR   |0.054  |0.154    |-0.165 |0.259 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|CL1.Comdty/GRNWIND    |-0.036 |0.107    |-0.184 |0.159 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|CL1.Comdty/GRNGEO     |0.065  |0.156    |-0.105 |0.246 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|CL1.Comdty/GRNFUEL    |0.053  |0.076    |-0.049 |0.186 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|CL1.Comdty/GRNBIO     |0.318  |0.128    |0.143  |0.545 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|CL1.Comdty/NG1.Comdty |0.085  |0.073    |0.037  |0.136 |0.032 |0.338   |-0.129 |0.973 |-0.133 |
+|NG1.Comdty/GRNSOLAR   |-0.047 |0.106    |-0.223 |0.134 |0.005 |0.889   |0.057  |0.571 |0.100  |
+|NG1.Comdty/GRNWIND    |-0.039 |0.071    |-0.167 |0.062 |0.005 |0.889   |0.057  |0.571 |0.100  |
+|NG1.Comdty/GRNGEO     |-0.074 |0.119    |-0.268 |0.100 |0.005 |0.889   |0.057  |0.571 |0.100  |
+|NG1.Comdty/GRNFUEL    |0.056  |0.038    |0.004  |0.129 |0.005 |0.889   |0.057  |0.571 |0.100  |
+|NG1.Comdty/GRNBIO     |-0.002 |0.097    |-0.169 |0.130 |0.005 |0.889   |0.057  |0.571 |0.100  |
+|NG1.Comdty/CL1.Comdty |0.214  |0.110    |0.091  |0.391 |0.005 |0.889   |0.057  |0.571 |0.100  |
+> par(mfcol = c(ceiling(k/2),2), oma = c(0, 1, 0, 0) + 0.5, mar = c(1, 1, 1, 1) + 0.5, mgp = c(1, 0.4, 0))
+> for (j in 1:k) {
++   plot(date,mhp$Beta[j,j,]*NA,type='l',las=1,xaxs='i',yaxs='i',xlab='',ylab='',
++        main=paste(NAMES[j]),tck=-.02,col=j,ylim=c(-0.5,3))
++   grid(NA,NULL)
++   coefs = lm(Y[,j]~Y[,-j])$coefficients[-1]
++   for (i in 1:k) {
++     if (i!=j) {
++       lines(date,mhp$Beta[j,i,],col=i)
++       abline(h=0,lty=3)
++       box()
++     }
++   }
++   col = 1:k
++   col = col[-j]
++   abline(h=coefs,lty=3,col=col)
++   legend("bottom",NAMES[-j],fill=c(1:k)[-j],bty="n",cex=0.6,ncol=k)
++ }
+Error in seq.int(from, to, length.out = n) : 
+  'from' must be a finite number
+> # ---------------- safety checks & date alignment -----------------------------
+> if (!exists("mhp") || is.null(mhp$Beta)) stop("mhp$Beta not found. Compute 'mhp' first.")
+> dimBeta <- dim(mhp$Beta)
+> if (length(dimBeta) != 3) stop("mhp$Beta must be a 3D array: [k, k, t].")
+> k <- dimBeta[1]
+> if (dimBeta[2] != k) stop("mhp$Beta must be square in first two dims.")
+> tlen <- dimBeta[3]
+> 
+> # choose dates vector aligned with mhp$Beta time dimension
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with mhp$Beta (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(mhp$Beta)[3] = ", tlen, ". Align your dates with mhp$Beta.")
++ }
+Using dates[-1] to align with mhp$Beta (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # ---------------- plotting parameters ---------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma   = c(0, 1, 0, 0) + 0.5,
++     mar   = c(1, 1, 1, 1) + 0.5,
++     mgp   = c(1, 0.4, 0))
+> 
+> # compute y-limits safely from mhp$Beta (ignore NAs)
+> beta_min <- suppressWarnings(min(mhp$Beta, na.rm = TRUE))
+> beta_max <- suppressWarnings(max(mhp$Beta, na.rm = TRUE))
+> # fallback if everything is NA
+> if (!is.finite(beta_min) || !is.finite(beta_max)) {
++   beta_min <- -0.5
++   beta_max <-  3
++ }
+> 
+> cols <- 1:k    # colors for lines; replace with custom palette if desired
+> 
+> # ---------------- main loop --------------------------------------------------
+> for (j in 1:k) {
++   # empty plot to set axes (avoid using plot(x, y_all_NA) which can cause 'from' errors)
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1, xaxs = "i", yaxs = "i",
++        xlab = "", ylab = "", main = paste(NAMES[j]),
++        tck = -0.02, ylim = c(beta_min, beta_max))
++ 
++   graphics::grid()
++ 
++   # draw each series' beta time series (including the diagonal)
++   for (i in 1:k) {
++     # ensure numeric vector
++     ybeta <- as.numeric(mhp$Beta[j, i, ])
++     # skip non-finite series (all-NA or length mismatch)
++     if (!is.numeric(ybeta) || all(!is.finite(ybeta))) next
++     lines(dates_plot, ybeta, col = cols[i], lty = 1)
++   }
++ 
++   abline(h = 0, lty = 3)  # baseline
++   box()
++ 
++   # compute OLS coefficients of Y[, j] ~ Y[, -j] safely
++   coefs <- tryCatch({
++     # ensure Y exists and has correct dimensions: n x k
++     if (!exists("Y")) stop("Y not found for regression.")
++     if (ncol(Y) != k) stop("Y must have k columns matching mhp$Beta.")
++     # build formula safely and run lm
++     data_for_lm <- as.data.frame(Y)
++     response <- data_for_lm[, j]
++     predictors <- data_for_lm[, -j, drop = FALSE]
++     tmp_lm <- lm(response ~ ., data = predictors)
++     as.numeric(tmp_lm$coefficients[-1])  # drop intercept
++   }, error = function(e) {
++     warning("lm() for series ", j, " failed: ", conditionMessage(e))
++     rep(NA_real_, k - 1)
++   })
++ 
++   # draw horizontal lines for finite coefficients only
++   if (length(coefs) == k - 1) {
++     coefs_finite_idx <- which(is.finite(coefs))
++     if (length(coefs_finite_idx) > 0) {
++       # map coefficient indices back to series indices (skip j)
++       series_idx <- setdiff(1:k, j)
++       for (z in seq_along(series_idx)) {
++         si <- series_idx[z]
++         coef_val <- coefs[z]
++         if (is.finite(coef_val)) {
++           abline(h = coef_val, lty = 3, col = cols[si])
++         }
++       }
++     }
++   } else {
++     warning("Unexpected length of 'coefs' for series ", j, " — skipping abline for OLS coefs.")
++   }
++ 
++   # legend: use colors for lines, exclude the diagonal series j
++   legend_cols <- cols[-j]
++   legend_names <- NAMES[-j]
++   legend("bottom", legend = legend_names, col = legend_cols, lty = 1,
++          bty = "n", cex = 0.6, ncol = min(k, 3))
++ }
+> 
+> # ---------------- safety checks & date alignment -----------------------------
+> if (!exists("mhp") || is.null(mhp$Beta)) stop("mhp$Beta not found. Compute 'mhp' first.")
+> dimBeta <- dim(mhp$Beta)
+> if (length(dimBeta) != 3) stop("mhp$Beta must be a 3D array: [k, k, t].")
+> k <- dimBeta[1]
+> if (dimBeta[2] != k) stop("mhp$Beta must be square in first two dims.")
+> tlen <- dimBeta[3]
+> 
+> # choose dates vector aligned with mhp$Beta time dimension
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with mhp$Beta (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(mhp$Beta)[3] = ", tlen, ". Align your dates with mhp$Beta.")
++ }
+Using dates[-1] to align with mhp$Beta (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # ---------------- plotting parameters ---------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma   = c(0, 1, 0, 0) + 0.5,
++     mar   = c(1, 1, 1, 1) + 0.5,
++     mgp   = c(1, 0.4, 0))
+> 
+> # compute y-limits safely from mhp$Beta (ignore NAs)
+> beta_min <- suppressWarnings(min(mhp$Beta, na.rm = TRUE))
+> beta_max <- suppressWarnings(max(mhp$Beta, na.rm = TRUE))
+> # fallback if everything is NA
+> if (!is.finite(beta_min) || !is.finite(beta_max)) {
++   beta_min <- -0.5
++   beta_max <-  3
++ }
+> 
+> cols <- 1:k    # colors for lines; replace with custom palette if desired
+> 
+> # ---------------- main loop --------------------------------------------------
+> for (j in 1:k) {
++   # empty plot to set axes (avoid using plot(x, y_all_NA) which can cause 'from' errors)
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1, xaxs = "i", yaxs = "i",
++        xlab = "", ylab = "", main = paste(NAMES[j]),
++        tck = -0.02, ylim = c(beta_min, beta_max))
++ 
++   graphics::grid()
++ 
++   # draw each series' beta time series (including the diagonal)
++   for (i in 1:k) {
++     # ensure numeric vector
++     ybeta <- as.numeric(mhp$Beta[j, i, ])
++     # skip non-finite series (all-NA or length mismatch)
++     if (!is.numeric(ybeta) || all(!is.finite(ybeta))) next
++     lines(dates_plot, ybeta, col = cols[i], lty = 1)
++   }
++ 
++   abline(h = 0, lty = 3)  # baseline
++   box()
++ 
++   # compute OLS coefficients of Y[, j] ~ Y[, -j] safely
++   coefs <- tryCatch({
++     # ensure Y exists and has correct dimensions: n x k
++     if (!exists("Y")) stop("Y not found for regression.")
++     if (ncol(Y) != k) stop("Y must have k columns matching mhp$Beta.")
++     # build formula safely and run lm
++     data_for_lm <- as.data.frame(Y)
++     response <- data_for_lm[, j]
++     predictors <- data_for_lm[, -j, drop = FALSE]
++     tmp_lm <- lm(response ~ ., data = predictors)
++     as.numeric(tmp_lm$coefficients[-1])  # drop intercept
++   }, error = function(e) {
++     warning("lm() for series ", j, " failed: ", conditionMessage(e))
++     rep(NA_real_, k - 1)
++   })
++ 
++   # draw horizontal lines for finite coefficients only
++   if (length(coefs) == k - 1) {
++     coefs_finite_idx <- which(is.finite(coefs))
++     if (length(coefs_finite_idx) > 0) {
++       # map coefficient indices back to series indices (skip j)
++       series_idx <- setdiff(1:k, j)
++       for (z in seq_along(series_idx)) {
++         si <- series_idx[z]
++         coef_val <- coefs[z]
++         if (is.finite(coef_val)) {
++           abline(h = coef_val, lty = 3, col = cols[si])
++         }
++       }
++     }
++   } else {
++     warning("Unexpected length of 'coefs' for series ", j, " — skipping abline for OLS coefs.")
++   }
++ 
++   # legend: use colors for lines, exclude the diagonal series j
++   legend_cols <- cols[-j]
++   legend_names <- NAMES[-j]
++   legend("bottom", legend = legend_names, col = legend_cols, lty = 1,
++          bty = "n", cex = 0.6, ncol = min(k, 3))
++ }
+> 
+> # ---------------- safety checks & date alignment -----------------------------
+> if (!exists("mhp") || is.null(mhp$Beta)) stop("mhp$Beta not found. Compute 'mhp' first.")
+> dimBeta <- dim(mhp$Beta)
+> if (length(dimBeta) != 3) stop("mhp$Beta must be a 3D array: [k, k, t].")
+> k <- dimBeta[1]
+> if (dimBeta[2] != k) stop("mhp$Beta must be square in first two dims.")
+> tlen <- dimBeta[3]
+> 
+> # choose dates vector aligned with mhp$Beta time dimension
+> if (exists("dates") && length(dates) == tlen) {
++   dates_plot <- dates
++ } else if (exists("dates") && length(dates) == tlen + 1) {
++   dates_plot <- dates[-1]
++   message("Using dates[-1] to align with mhp$Beta (returns).")
++ } else {
++   stop("Length mismatch: length(dates) = ", ifelse(exists("dates"), length(dates), "NULL"),
++        " but dim(mhp$Beta)[3] = ", tlen, ". Align your dates with mhp$Beta.")
++ }
+Using dates[-1] to align with mhp$Beta (returns).
+> stopifnot(length(dates_plot) == tlen)
+> 
+> # ---------------- plotting parameters ---------------------------------------
+> par(mfcol = c(ceiling(k/2), 2),
++     oma   = c(0, 1, 0, 0) + 0.5,
++     mar   = c(1, 1, 1, 1) + 0.5,
++     mgp   = c(1, 0.4, 0))
+> 
+> # compute y-limits safely from mhp$Beta (ignore NAs)
+> beta_min <- suppressWarnings(min(mhp$Beta, na.rm = TRUE))
+> beta_max <- suppressWarnings(max(mhp$Beta, na.rm = TRUE))
+> # fallback if everything is NA
+> if (!is.finite(beta_min) || !is.finite(beta_max)) {
++   beta_min <- -0.5
++   beta_max <-  3
++ }
+> 
+> cols <- 1:k    # colors for lines; replace with custom palette if desired
+> 
+> # ---------------- main loop --------------------------------------------------
+> for (j in 1:k) {
++   # empty plot to set axes (avoid using plot(x, y_all_NA) which can cause 'from' errors)
++   plot(dates_plot, rep(NA, tlen), type = "n", las = 1, xaxs = "i", yaxs = "i",
++        xlab = "", ylab = "", main = paste(NAMES[j]),
++        tck = -0.02, ylim = c(beta_min, beta_max))
++ 
++   graphics::grid()
++ 
++   # draw each series' beta time series (including the diagonal)
++   for (i in 1:k) {
++     # ensure numeric vector
++     ybeta <- as.numeric(mhp$Beta[j, i, ])
++     # skip non-finite series (all-NA or length mismatch)
++     if (!is.numeric(ybeta) || all(!is.finite(ybeta))) next
++     lines(dates_plot, ybeta, col = cols[i], lty = 1)
++   }
++ 
++   abline(h = 0, lty = 3)  # baseline
++   box()
++ 
++   # compute OLS coefficients of Y[, j] ~ Y[, -j] safely
++   coefs <- tryCatch({
++     # ensure Y exists and has correct dimensions: n x k
++     if (!exists("Y")) stop("Y not found for regression.")
++     if (ncol(Y) != k) stop("Y must have k columns matching mhp$Beta.")
++     # build formula safely and run lm
++     data_for_lm <- as.data.frame(Y)
++     response <- data_for_lm[, j]
++     predictors <- data_for_lm[, -j, drop = FALSE]
++     tmp_lm <- lm(response ~ ., data = predictors)
++     as.numeric(tmp_lm$coefficients[-1])  # drop intercept
++   }, error = function(e) {
++     warning("lm() for series ", j, " failed: ", conditionMessage(e))
++     rep(NA_real_, k - 1)
++   })
++ 
++   # draw horizontal lines for finite coefficients only
++   if (length(coefs) == k - 1) {
++     coefs_finite_idx <- which(is.finite(coefs))
++     if (length(coefs_finite_idx) > 0) {
++       # map coefficient indices back to series indices (skip j)
++       series_idx <- setdiff(1:k, j)
++       for (z in seq_along(series_idx)) {
++         si <- series_idx[z]
++         coef_val <- coefs[z]
++         if (is.finite(coef_val)) {
++           abline(h = coef_val, lty = 3, col = cols[si])
++         }
++       }
++     }
++   } else {
++     warning("Unexpected length of 'coefs' for series ", j, " — skipping abline for OLS coefs.")
++   }
++ 
++   # legend: use colors for lines, exclude the diagonal series j
++   legend_cols <- cols[-j]
++   legend_names <- NAMES[-j]
++   legend("bottom", legend = legend_names, col = legend_cols, lty = 1,
++          bty = "n", cex = 0.6, ncol = min(k, 3))
++ }
+> 
+> bpw = BivariatePortfolio(Y/100, H, statistics=statistics, method=method, metric=metric, digit=3)
+> kable(bpw$TABLE)
+
+
+|                      |Mean  |Std.Dev. |5%    |95%   |HE    |p-value |SR     |
+|:---------------------|:-----|:--------|:-----|:-----|:-----|:-------|:------|
+|GRNSOLAR/GRNWIND      |0.380 |0.176    |0.113 |0.697 |0.449 |0.000   |0.297  |
+|GRNSOLAR/GRNGEO       |0.318 |0.167    |0.064 |0.621 |0.465 |0.000   |0.299  |
+|GRNSOLAR/GRNFUEL      |0.840 |0.155    |0.548 |1.000 |0.078 |0.017   |0.379  |
+|GRNSOLAR/GRNBIO       |0.386 |0.242    |0.008 |0.798 |0.396 |0.000   |0.230  |
+|GRNSOLAR/CL1.Comdty   |0.546 |0.199    |0.231 |0.879 |0.151 |0.000   |0.099  |
+|GRNSOLAR/NG1.Comdty   |0.710 |0.149    |0.407 |0.904 |0.336 |0.000   |0.758  |
+|GRNWIND/GRNSOLAR      |0.620 |0.176    |0.303 |0.887 |0.185 |0.000   |0.297  |
+|GRNWIND/GRNGEO        |0.428 |0.191    |0.132 |0.776 |0.406 |0.000   |0.218  |
+|GRNWIND/GRNFUEL       |0.861 |0.118    |0.645 |1.000 |0.057 |0.084   |0.137  |
+|GRNWIND/GRNBIO        |0.489 |0.227    |0.078 |0.812 |0.342 |0.000   |0.167  |
+|GRNWIND/CL1.Comdty    |0.620 |0.170    |0.323 |0.869 |0.295 |0.000   |0.255  |
+|GRNWIND/NG1.Comdty    |0.764 |0.120    |0.544 |0.927 |0.236 |0.000   |0.488  |
+|GRNGEO/GRNSOLAR       |0.682 |0.167    |0.379 |0.936 |0.184 |0.000   |0.299  |
+|GRNGEO/GRNWIND        |0.572 |0.191    |0.224 |0.868 |0.387 |0.000   |0.218  |
+|GRNGEO/GRNFUEL        |0.894 |0.091    |0.718 |1.000 |0.049 |0.145   |0.115  |
+|GRNGEO/GRNBIO         |0.546 |0.211    |0.202 |0.888 |0.289 |0.000   |0.018  |
+|GRNGEO/CL1.Comdty     |0.677 |0.175    |0.335 |0.925 |0.079 |0.016   |-0.037 |
+|GRNGEO/NG1.Comdty     |0.792 |0.131    |0.512 |0.946 |0.261 |0.000   |0.377  |
+|GRNFUEL/GRNSOLAR      |0.160 |0.155    |0.000 |0.452 |0.668 |0.000   |0.379  |
+|GRNFUEL/GRNWIND       |0.139 |0.118    |0.000 |0.355 |0.770 |0.000   |0.137  |
+|GRNFUEL/GRNGEO        |0.106 |0.091    |0.000 |0.282 |0.775 |0.000   |0.115  |
+|GRNFUEL/GRNBIO        |0.129 |0.130    |0.000 |0.388 |0.731 |0.000   |-0.071 |
+|GRNFUEL/CL1.Comdty    |0.301 |0.186    |0.058 |0.659 |0.444 |0.000   |-0.446 |
+|GRNFUEL/NG1.Comdty    |0.497 |0.171    |0.203 |0.765 |0.511 |0.000   |0.311  |
+|GRNBIO/GRNSOLAR       |0.614 |0.242    |0.202 |0.992 |0.240 |0.000   |0.230  |
+|GRNBIO/GRNWIND        |0.511 |0.227    |0.188 |0.922 |0.440 |0.000   |0.167  |
+|GRNBIO/GRNGEO         |0.454 |0.211    |0.112 |0.798 |0.413 |0.000   |0.018  |
+|GRNBIO/GRNFUEL        |0.871 |0.130    |0.612 |1.000 |0.060 |0.071   |-0.071 |
+|GRNBIO/CL1.Comdty     |0.668 |0.171    |0.364 |0.915 |0.118 |0.000   |-0.157 |
+|GRNBIO/NG1.Comdty     |0.776 |0.136    |0.506 |0.939 |0.262 |0.000   |0.106  |
+|CL1.Comdty/GRNSOLAR   |0.454 |0.199    |0.121 |0.769 |0.906 |0.000   |0.099  |
+|CL1.Comdty/GRNWIND    |0.380 |0.170    |0.131 |0.677 |0.947 |0.000   |0.255  |
+|CL1.Comdty/GRNGEO     |0.323 |0.175    |0.075 |0.665 |0.933 |0.000   |-0.037 |
+|CL1.Comdty/GRNFUEL    |0.699 |0.186    |0.341 |0.942 |0.829 |0.000   |-0.446 |
+|CL1.Comdty/GRNBIO     |0.332 |0.171    |0.085 |0.636 |0.922 |0.000   |-0.157 |
+|CL1.Comdty/NG1.Comdty |0.688 |0.186    |0.360 |0.931 |0.894 |0.000   |0.023  |
+|NG1.Comdty/GRNSOLAR   |0.290 |0.149    |0.096 |0.593 |0.780 |0.000   |0.758  |
+|NG1.Comdty/GRNWIND    |0.236 |0.120    |0.073 |0.456 |0.829 |0.000   |0.488  |
+|NG1.Comdty/GRNGEO     |0.208 |0.131    |0.054 |0.488 |0.840 |0.000   |0.377  |
+|NG1.Comdty/GRNFUEL    |0.503 |0.171    |0.235 |0.797 |0.551 |0.000   |0.311  |
+|NG1.Comdty/GRNBIO     |0.224 |0.136    |0.061 |0.494 |0.806 |0.000   |0.106  |
+|NG1.Comdty/CL1.Comdty |0.312 |0.186    |0.069 |0.640 |0.683 |0.000   |0.023  |
+> PCIc = dca$PCI
+> PCIg = dca$CT
+> for (l in 1:dim(dca$CT)[3]) {
++   for (i in 1:k) {
++     for (j in 1:k) {
++       PCIg[i,j,l] = (2*R[i,j,l]^2)/(1+R[i,j,l]^2)
++     }
++   }
++ }
+> mvp = MinimumConnectednessPortfolio(Y/100, H, statistics=statistics, method=method, metric=metric, digit=3)
+> mcp = MinimumConnectednessPortfolio(Y/100, R, statistics=statistics, method=method, metric=metric, digit=3)
+> mpc = MinimumConnectednessPortfolio(Y/100, PCIc, statistics=statistics, method=method, metric=metric, digit=3)
+> mpg = MinimumConnectednessPortfolio(Y/100, PCIg, statistics=statistics, method=method, metric=metric, digit=3)
+> mrp = MinimumConnectednessPortfolio(Y/100, dca$CT, statistics=statistics, method=method, metric=metric, digit=3)
+> MVA = rbind(mvp$TABLE, mcp$TABLE, mpc$TABLE, mpg$TABLE, mrp$TABLE)
+> kable(MVA)
+
+
+|           |Mean  |Std.Dev. |5%    |95%   |HE     |p-value |SR     |
+|:----------|:-----|:--------|:-----|:-----|:------|:-------|:------|
+|GRNSOLAR   |0.089 |0.084    |0.000 |0.245 |0.742  |0.000   |0.368  |
+|GRNWIND    |0.217 |0.130    |0.038 |0.436 |0.619  |0.000   |0.368  |
+|GRNGEO     |0.285 |0.144    |0.064 |0.544 |0.607  |0.000   |0.368  |
+|GRNFUEL    |0.005 |0.015    |0.000 |0.039 |0.907  |0.000   |0.368  |
+|GRNBIO     |0.188 |0.175    |0.000 |0.551 |0.675  |0.000   |0.368  |
+|CL1.Comdty |0.125 |0.095    |0.006 |0.311 |0.971  |0.000   |0.368  |
+|NG1.Comdty |0.091 |0.064    |0.021 |0.210 |0.915  |0.000   |0.368  |
+|GRNSOLAR   |0.079 |0.044    |0.000 |0.146 |0.159  |0.000   |0.013  |
+|GRNWIND    |0.155 |0.033    |0.106 |0.208 |-0.243 |0.000   |0.013  |
+|GRNGEO     |0.153 |0.025    |0.114 |0.194 |-0.282 |0.000   |0.013  |
+|GRNFUEL    |0.099 |0.039    |0.021 |0.159 |0.697  |0.000   |0.013  |
+|GRNBIO     |0.078 |0.031    |0.027 |0.126 |-0.058 |0.096   |0.013  |
+|CL1.Comdty |0.174 |0.028    |0.132 |0.233 |0.907  |0.000   |0.013  |
+|NG1.Comdty |0.262 |0.024    |0.227 |0.302 |0.722  |0.000   |0.013  |
+|GRNSOLAR   |0.105 |0.023    |0.069 |0.145 |0.305  |0.000   |0.093  |
+|GRNWIND    |0.143 |0.015    |0.120 |0.164 |-0.028 |0.421   |0.093  |
+|GRNGEO     |0.147 |0.011    |0.128 |0.167 |-0.060 |0.089   |0.093  |
+|GRNFUEL    |0.130 |0.021    |0.090 |0.158 |0.750  |0.000   |0.093  |
+|GRNBIO     |0.124 |0.013    |0.102 |0.145 |0.125  |0.000   |0.093  |
+|CL1.Comdty |0.164 |0.010    |0.149 |0.183 |0.923  |0.000   |0.093  |
+|NG1.Comdty |0.188 |0.010    |0.173 |0.205 |0.770  |0.000   |0.093  |
+|GRNSOLAR   |0.081 |0.041    |0.000 |0.141 |0.166  |0.000   |-0.001 |
+|GRNWIND    |0.145 |0.026    |0.110 |0.182 |-0.233 |0.000   |-0.001 |
+|GRNGEO     |0.147 |0.017    |0.120 |0.178 |-0.271 |0.000   |-0.001 |
+|GRNFUEL    |0.119 |0.036    |0.048 |0.167 |0.700  |0.000   |-0.001 |
+|GRNBIO     |0.106 |0.023    |0.065 |0.140 |-0.050 |0.156   |-0.001 |
+|CL1.Comdty |0.183 |0.018    |0.157 |0.220 |0.908  |0.000   |-0.001 |
+|NG1.Comdty |0.220 |0.023    |0.188 |0.258 |0.724  |0.000   |-0.001 |
+|GRNSOLAR   |0.123 |0.011    |0.105 |0.144 |0.349  |0.000   |0.122  |
+|GRNWIND    |0.141 |0.009    |0.126 |0.155 |0.038  |0.255   |0.122  |
+|GRNGEO     |0.144 |0.007    |0.133 |0.157 |0.008  |0.808   |0.122  |
+|GRNFUEL    |0.135 |0.011    |0.113 |0.151 |0.766  |0.000   |0.122  |
+|GRNBIO     |0.133 |0.007    |0.121 |0.145 |0.181  |0.000   |0.122  |
+|CL1.Comdty |0.155 |0.006    |0.146 |0.167 |0.928  |0.000   |0.122  |
+|NG1.Comdty |0.169 |0.007    |0.159 |0.179 |0.785  |0.000   |0.122  |
+> port.mat = data.frame(
++                      MVP=mvp$portfolio_return,
++                      MCP=mcp$portfolio_return,
++                      MPC=mpc$portfolio_return,
++                      MPG=mpg$portfolio_return,
++                      MRP=mrp$portfolio_return
++                      )
+> port.xts = xts(port.mat, order.by=date)
+Error in xts(port.mat, order.by = date) : 
+  order.by requires an appropriate time-based object
+> ir = matrix(NA, nrow=1, ncol=ncol(port.xts))
+Error: object 'port.xts' not found
+> colnames(ir) = colnames(port.xts)
+Error: object 'port.xts' not found
+> rownames(ir) = "GRE"
+Error: object 'ir' not found
+> for (i in 1:ncol(port.xts)) {
++   ir[,i] = InformationRatio(Ra=port.xts[,i], Rb=Y[,1]/100)
++ }
+Error: object 'port.xts' not found
+> k = ncol(port.xts)
+Error: object 'port.xts' not found
+> table = matrix(NA, ncol=k, nrow=5)
+> for (i in 1:k) {
++   table[,i] = c(Return.annualized(port.xts[,i]),
++                 StdDev.annualized(port.xts[,i]),
++                 SharpeRatio(port.xts[,i], FUN=("StdDev"), annualize=TRUE),
++                 SharpeRatio(port.xts[,i], FUN=("VaR"), annualize=TRUE),
++                 SharpeRatio(port.xts[,i], FUN=("ES"), annualize=TRUE)
++   )
++ }
+Error in Return.annualized(port.xts[, i]) : 
+  'R' needs to be timeBased or xtsible, or scale must be specified.
+> colnames(table) = colnames(port.xts)
+Error: object 'port.xts' not found
+> rownames(table) = c("Return","StdDev","Sharpe Ratio (StdDev)","Sharpe Ratio (VaR)","Sharpe Ratio (CVaR)")
+> kable(rbind(table, ir))
+Error: object 'ir' not found
+> # Required packages
+> if (!requireNamespace("xts", quietly = TRUE)) install.packages("xts")
+> if (!requireNamespace("PerformanceAnalytics", quietly = TRUE)) install.packages("PerformanceAnalytics")
+> if (!requireNamespace("knitr", quietly = TRUE)) install.packages("knitr")
+> 
+> library(xts)
+> library(PerformanceAnalytics)
+> library(knitr)
+> 
+> # ------------- 1) Prepare dates (auto-detect aligned vector) ----------------
+> # Prefer 'dates_plot' (aligned to returns), else 'dates'. If neither exists,
+> # try to fallback to 'df' first column if present (best-effort).
+> dates_for_xts <- NULL
+> if (exists("dates_plot") && is.vector(dates_plot)) {
++   dates_for_xts <- as.Date(dates_plot)
++ } else if (exists("dates") && is.vector(dates)) {
++   dates_for_xts <- as.Date(dates)
++ } else if (exists("df") && ncol(df) >= 1) {
++   # try to parse first column as a date
++   possible_formats <- c("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d", "%d-%b-%Y")
++   parsed <- as.Date(df[[1]], tryFormats = possible_formats)
++   if (!any(is.na(parsed))) dates_for_xts <- parsed
++ }
+> 
+> if (is.null(dates_for_xts)) stop("No date vector found. Create 'dates' or 'dates_plot' (Date class) before running this block.")
+> 
+> # ------------- 2) Build port.mat (ensure numeric) ---------------------------
+> # Replace mvp,mcp,... placeholders with your actual portfolio objects if they have different names.
+> port.mat <- data.frame(
++   MVP = as.numeric(mvp$portfolio_return),
++   MCP = as.numeric(mcp$portfolio_return),
++   MPC = as.numeric(mpc$portfolio_return),
++   MPG = as.numeric(mpg$portfolio_return),
++   MRP = as.numeric(mrp$portfolio_return)
++ )
+> 
+> # Basic sanity
+> if (nrow(port.mat) != length(dates_for_xts)) {
++   # try aligning by dropping the first date if returns were computed from prices
++   if (length(dates_for_xts) == nrow(port.mat) + 1) {
++     dates_for_xts <- dates_for_xts[-1]
++     message("Aligned dates_for_xts <- dates_for_xts[-1] (returns/prices mismatch corrected).")
++   } else {
++     stop("Length mismatch: nrow(port.mat) = ", nrow(port.mat),
++          " but length(dates_for_xts) = ", length(dates_for_xts),
++          ". Ensure your portfolio return series and dates align.")
++   }
++ }
+Aligned dates_for_xts <- dates_for_xts[-1] (returns/prices mismatch corrected).
+> 
+> # Convert percent → decimal if your returns in port.mat are in percent (you mentioned using % returns).
+> # If port.mat already in decimals (e.g., 0.01 for 1%), set do_convert <- FALSE.
+> do_convert <- TRUE
+> if (abs(mean(port.mat, na.rm = TRUE)) < 0.02) { # heuristic: mean < 2% likely already decimal
++   do_convert <- FALSE
++ }
+Error in if (abs(mean(port.mat, na.rm = TRUE)) < 0.02) { : 
+  missing value where TRUE/FALSE needed
+In addition: Warning message:
+In mean.default(port.mat, na.rm = TRUE) :
+  argument is not numeric or logical: returning NA
+> if (do_convert) {
++   port.decimal <- as.matrix(port.mat) / 100
++ } else {
++   port.decimal <- as.matrix(port.mat)
++ }
+> 
+> # make xts
+> port.xts <- xts(port.decimal, order.by = dates_for_xts)
+> colnames(port.xts) <- colnames(port.mat)
+> 
+> # ------------- 3) Set scale (annualization factor) -------------------------
+> # Change this if your returns are monthly (12) or weekly (52)
+> scale <- 252
+> 
+> # ------------- 4) Compute Information Ratio (vs benchmark Y[,1]) ----------
+> # Ensure Y exists and convert benchmark to decimal if needed
+> if (!exists("Y")) stop("Benchmark series 'Y' not found. Provide Y (returns) before running.")
+> # Y might be percent (e.g., 100 * returns); convert to decimal if mean large
+> bench <- as.numeric(coredata(Y[, 1]))
+> if (abs(mean(bench, na.rm = TRUE)) > 0.02) bench <- bench / 100
+> # make benchmark xts aligned with port.xts
+> if (length(bench) == nrow(port.xts)) {
++   bench.xts <- xts(bench, order.by = index(port.xts))
++ } else if (length(bench) == nrow(port.xts) + 1) {
++   bench.xts <- xts(bench[-1], order.by = index(port.xts))
++ } else {
++   stop("Benchmark length mismatch with port.xts. length(bench)=", length(bench), ", nrow(port.xts)=", nrow(port.xts))
++ }
+> 
+> # Info ratios
+> k <- ncol(port.xts)
+> ir_vec <- rep(NA_real_, k)
+> names(ir_vec) <- colnames(port.xts)
+> for (i in 1:k) {
++   # InformationRatio expects xts inputs
++   ir_vec[i] <- tryCatch({
++     InformationRatio(Ra = port.xts[, i], Rb = bench.xts)
++   }, error = function(e) {
++     warning("InformationRatio for ", colnames(port.xts)[i], " failed: ", conditionMessage(e))
++     NA_real_
++   })
++ }
+Warning messages:
+1: In value[[3L]](cond) :
+  InformationRatio for MVP failed: missing value where TRUE/FALSE needed
+2: In value[[3L]](cond) :
+  InformationRatio for MCP failed: missing value where TRUE/FALSE needed
+3: In value[[3L]](cond) :
+  InformationRatio for MPC failed: missing value where TRUE/FALSE needed
+4: In value[[3L]](cond) :
+  InformationRatio for MPG failed: missing value where TRUE/FALSE needed
+5: In value[[3L]](cond) :
+  InformationRatio for MRP failed: missing value where TRUE/FALSE needed
+> 
+> # ------------- 5) Build performance table (5 rows x k cols) -----------------
+> table_mat <- matrix(NA_real_, nrow = 5, ncol = k)
+> colnames(table_mat) <- colnames(port.xts)
+> rownames(table_mat) <- c("Return", "StdDev", "Sharpe Ratio (StdDev)", "Sharpe Ratio (VaR)", "Sharpe Ratio (CVaR)")
+> 
+> for (i in 1:k) {
++   Ri <- port.xts[, i]
++   # guard: require finite data
++   if (all(!is.finite(coredata(Ri)))) next
++   # compute metrics; use tryCatch to avoid aborts
++   table_mat[, i] <- tryCatch({
++     c(
++       Return.annualized(R = Ri, scale = scale),
++       StdDev.annualized(R = Ri, scale = scale),
++       # Sharpe using StdDev
++       as.numeric(SharpeRatio(Ri, FUN = "StdDev", annualize = TRUE)),
++       # Sharpe using VaR (note: this uses PerformanceAnalytics' SharpeRatio implementation)
++       as.numeric(SharpeRatio(Ri, FUN = "VaR", annualize = TRUE)),
++       # Sharpe using ES (CVaR)
++       as.numeric(SharpeRatio(Ri, FUN = "ES", annualize = TRUE))
++     )
++   }, error = function(e) {
++     warning("Performance metrics for ", colnames(port.xts)[i], " failed: ", conditionMessage(e))
++     rep(NA_real_, 5)
++   })
++ }
+Warning messages:
+1: In value[[3L]](cond) :
+  Performance metrics for MVP failed: argument "x" is missing, with no default
+2: In value[[3L]](cond) :
+  Performance metrics for MCP failed: argument "x" is missing, with no default
+3: In value[[3L]](cond) :
+  Performance metrics for MPC failed: argument "x" is missing, with no default
+4: In value[[3L]](cond) :
+  Performance metrics for MPG failed: argument "x" is missing, with no default
+5: In value[[3L]](cond) :
+  Performance metrics for MRP failed: argument "x" is missing, with no default
+> 
+> # ------------- 6) Combine table + IR and print nicely -----------------------
+> # rbind the table + Information Ratio row
+> ir_row <- matrix(ir_vec, nrow = 1)
+> rownames(ir_row) <- "Information Ratio"
+> final_tbl <- rbind(table_mat, ir_row)
+> 
+> # Round for display
+> final_tbl_rounded <- round(final_tbl, digits = 4)
+> 
+> # Print with knitr::kable
+> kable(final_tbl_rounded, caption = "Table 11: Portfolio performance and Information Ratio (GRE)")
+
+
+Table: Table 11: Portfolio performance and Information Ratio (GRE)
+
+|                      | MVP| MCP| MPC| MPG| MRP|
+|:---------------------|---:|---:|---:|---:|---:|
+|Return                |  NA|  NA|  NA|  NA|  NA|
+|StdDev                |  NA|  NA|  NA|  NA|  NA|
+|Sharpe Ratio (StdDev) |  NA|  NA|  NA|  NA|  NA|
+|Sharpe Ratio (VaR)    |  NA|  NA|  NA|  NA|  NA|
+|Sharpe Ratio (CVaR)   |  NA|  NA|  NA|  NA|  NA|
+|Information Ratio     |  NA|  NA|  NA|  NA|  NA|
+> 
+> # --- required packages
+> library(xts)
+> library(PerformanceAnalytics)
+> library(knitr)
+> 
+> # --- assume port.xts already created and aligned (from previous block)
+> # Check
+> if (!exists("port.xts")) stop("port.xts not found. Run the block that builds port.xts first.")
+> if (nrow(port.xts) < 2) stop("need at least two observations in port.xts.")
+> 
+> # annualization factor (252 for daily, 12 for monthly, 52 for weekly)
+> scale <- 252
+> 
+> # function: geometric annualized return (handles NA)
+> ann_return_geom <- function(x, scale) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   # guard against -1 returns
++   if (any(1 + x <= 0)) {
++     # fall back to arithmetic approximation if product nonpositive
++     return(mean(x, na.rm = TRUE) * scale)
++   }
++   T <- length(x)
++   (prod(1 + x)^(scale / T) - 1)
++ }
+> 
+> # function: annualized std dev (sqrt scaling)
+> ann_sd <- function(x, scale) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) < 2) return(NA_real_)
++   sd(x, na.rm = TRUE) * sqrt(scale)
++ }
+> 
+> # function: per-period VaR and ES using PerformanceAnalytics (historical), return numeric
+> period_VaR <- function(x, p = 0.95) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   as.numeric(VaR(x, p = p, method = "historical"))
++ }
+> period_ES <- function(x, p = 0.95) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   as.numeric(ES(x, p = p, method = "historical"))
++ }
+> 
+> # Build table
+> k <- ncol(port.xts)
+> table_mat <- matrix(NA_real_, nrow = 5, ncol = k)
+> colnames(table_mat) <- colnames(port.xts)
+> rownames(table_mat) <- c("Return", "StdDev", "Sharpe Ratio (StdDev)", "Sharpe Ratio (VaR)", "Sharpe Ratio (CVaR)")
+> 
+> for (i in seq_len(k)) {
++   Ri_xts <- port.xts[, i]
++   Ri <- as.numeric(coredata(Ri_xts))
++   # sanity: at least one finite observation
++   if (all(!is.finite(Ri))) {
++     next
++   }
++ 
++   # Annualized return (geometric preferred)
++   ar <- tryCatch(ann_return_geom(Ri, scale), error = function(e) NA_real_)
++   # Annualized std
++   sd_ann <- tryCatch(ann_sd(Ri, scale), error = function(e) NA_real_)
++ 
++   # Sharpe using std dev (assume risk-free = 0). If you have Rf, subtract it from ar.
++   sharpe_std <- if (is.finite(ar) && is.finite(sd_ann) && sd_ann > 0) ar / sd_ann else NA_real_
++ 
++   # VaR and ES (period) then scaled to annual via sqrt(scale)
++   var_p <- tryCatch(period_VaR(Ri, p = 0.95), error = function(e) NA_real_)
++   es_p  <- tryCatch(period_ES(Ri, p = 0.95), error = function(e) NA_real_)
++   var_ann <- if (is.finite(var_p)) var_p * sqrt(scale) else NA_real_
++   es_ann  <- if (is.finite(es_p))  es_p  * sqrt(scale) else NA_real_
++ 
++   # Sharpe using VaR / ES (use absolute risk measure in denominator)
++   sharpe_var <- if (is.finite(ar) && is.finite(var_ann) && abs(var_ann) > 0) ar / abs(var_ann) else NA_real_
++   sharpe_es  <- if (is.finite(ar) && is.finite(es_ann)  && abs(es_ann)  > 0) ar / abs(es_ann)  else NA_real_
++ 
++   table_mat[, i] <- c(ar, sd_ann, sharpe_std, sharpe_var, sharpe_es)
++ }
+> 
+> # Add Information Ratio (compare to benchmark Y[,1])
+> # Build benchmark xts aligned with port.xts
+> if (!exists("Y")) stop("Benchmark Y not found. Provide Y (returns) before running.")
+> bench_vec <- as.numeric(coredata(Y[, 1]))
+> # convert percent -> decimal if necessary (heuristic)
+> if (abs(mean(bench_vec, na.rm = TRUE)) > 0.02) bench_vec <- bench_vec / 100
+> # align lengths
+> if (length(bench_vec) == nrow(port.xts)) {
++   bench_xts <- xts(bench_vec, order.by = index(port.xts))
++ } else if (length(bench_vec) == nrow(port.xts) + 1) {
++   bench_xts <- xts(bench_vec[-1], order.by = index(port.xts))
++ } else {
++   stop("Benchmark (Y[,1]) length mismatch vs port.xts. Lengths: bench=", length(bench_vec),
++        " port=", nrow(port.xts))
++ }
+> 
+> ir_vec <- rep(NA_real_, k)
+> names(ir_vec) <- colnames(port.xts)
+> for (i in seq_len(k)) {
++   Ri <- port.xts[, i]
++   ir_vec[i] <- tryCatch({
++     InformationRatio(Ra = Ri, Rb = bench_xts)
++   }, error = function(e) NA_real_)
++ }
+> 
+> # Combine and print
+> ir_row <- matrix(ir_vec, nrow = 1)
+> rownames(ir_row) <- "Information Ratio"
+> final_tbl <- rbind(table_mat, ir_row)
+> final_tbl_rounded <- round(final_tbl, 6)
+> 
+> kable(final_tbl_rounded, caption = "Table 11: Portfolio performance and Information Ratio")
+
+
+Table: Table 11: Portfolio performance and Information Ratio
+
+|                      |      MVP|      MCP|      MPC|      MPG|      MRP|
+|:---------------------|--------:|--------:|--------:|--------:|--------:|
+|Return                | 0.000737| 0.000654| 0.000703| 0.000621| 0.000725|
+|StdDev                | 0.001672| 0.003020| 0.002746| 0.003007| 0.002656|
+|Sharpe Ratio (StdDev) | 0.440579| 0.216500| 0.255838| 0.206555| 0.272816|
+|Sharpe Ratio (VaR)    | 0.279037| 0.184189| 0.210090| 0.180332| 0.218918|
+|Sharpe Ratio (CVaR)   | 0.190078| 0.110935| 0.125341| 0.106901| 0.130944|
+|Information Ratio     |       NA|       NA|       NA|       NA|       NA|
+> 
+> for (nm in colnames(port.xts)) {
++   active <- coredata(port.xts[, nm]) - coredata(bench_aligned)
++   cat(nm, ": nfinite=", sum(is.finite(active)), " mean=", mean(active, na.rm=TRUE), " sd=", sd(active, na.rm=TRUE), "\n")
++ }
+Error: object 'bench_aligned' not found
+> 
+> # 1) show shapes / first values
+> cat("port.xts dims:", dim(port.xts), "\n")     # n x k
+port.xts dims: 3438 5 
+> cat("Benchmark Y dims:", dim(Y), "\n")
+Benchmark Y dims: 3438 7 
+> cat("First 6 port returns (MVP):\n"); print(head(coredata(port.xts[ , "MVP"])))
+First 6 port returns (MVP):
+               MVP
+[1,]  3.095876e-05
+[2,] -1.140256e-04
+[3,] -8.539116e-07
+[4,] -1.695061e-04
+[5,]  6.889616e-05
+[6,] -5.597842e-05
+> cat("First 6 benchmark returns (Y[,1]):\n"); print(head(coredata(Y[,1])))
+First 6 benchmark returns (Y[,1]):
+         2          3          4          5          6          7 
+ 2.3384446 -1.1905907 -0.9693997 -3.4526477  1.2378480 -0.7621844 
+> 
+> # 2) check alignment & conversion heuristics
+> bench_vec <- as.numeric(coredata(Y[,1]))
+> if (abs(mean(bench_vec, na.rm=TRUE)) > 0.02) cat("Benchmark looks like PERCENT (mean >", mean(bench_vec, na.rm=TRUE),") - consider dividing by 100\n")
+Benchmark looks like PERCENT (mean > 0.06592127 ) - consider dividing by 100
+> 
+> # 3) check NA / constant issues for each portfolio
+> for (nm in colnames(port.xts)) {
++   Ra <- coredata(port.xts[, nm])
++   # try align lengths with bench_vec
++   cat("-----", nm, "-----\n")
++   cat("n(Ra)=", length(Ra), "  n(bench)=", length(bench_vec), "\n")
++   cat("NA in Ra:", sum(is.na(Ra)), "NA in bench:", sum(is.na(bench_vec)), "\n")
++   difflen <- length(Ra) - length(bench_vec)
++   cat("Length difference (Ra - bench):", difflen, "\n")
++   # active if same length
++   if (length(Ra) == length(bench_vec)) {
++     active <- Ra - bench_vec
++     cat("active: mean=", mean(active, na.rm=TRUE), " sd=", sd(active, na.rm=TRUE), "\n")
++   } else {
++     cat("Cannot compute active (length mismatch). Consider aligning dates.\n")
++   }
++ }
+----- MVP -----
+n(Ra)= 3438   n(bench)= 3438 
+NA in Ra: 0 NA in bench: 0 
+Length difference (Ra - bench): 0 
+active: mean= -0.06591834  sd= 2.074377 
+----- MCP -----
+n(Ra)= 3438   n(bench)= 3438 
+NA in Ra: 0 NA in bench: 0 
+Length difference (Ra - bench): 0 
+active: mean= -0.06591866  sd= 2.074366 
+----- MPC -----
+n(Ra)= 3438   n(bench)= 3438 
+NA in Ra: 0 NA in bench: 0 
+Length difference (Ra - bench): 0 
+active: mean= -0.06591847  sd= 2.074354 
+----- MPG -----
+n(Ra)= 3438   n(bench)= 3438 
+NA in Ra: 0 NA in bench: 0 
+Length difference (Ra - bench): 0 
+active: mean= -0.06591879  sd= 2.074362 
+----- MRP -----
+n(Ra)= 3438   n(bench)= 3438 
+NA in Ra: 0 NA in bench: 0 
+Length difference (Ra - bench): 0 
+active: mean= -0.06591838  sd= 2.074349 
+> 
+> library(xts)
+> library(PerformanceAnalytics)
+> 
+> # choose scale: daily = 252 (change to 12 or 52 for monthly/weekly)
+> scale <- 252
+> 
+> # 1) prepare benchmark vector and try align it with port.xts
+> bench_raw <- as.numeric(coredata(Y[,1]))
+> # convert percent -> decimal if heuristic suggests percent
+> if (abs(mean(bench_raw, na.rm = TRUE)) > 0.02) {
++   bench_raw <- bench_raw / 100
++   message("Converted benchmark from percent -> decimal (divided by 100).")
++ }
+Converted benchmark from percent -> decimal (divided by 100).
+> 
+> # align by length: prefer bench aligned to port.xts
+> if (length(bench_raw) == nrow(port.xts)) {
++   bench_aligned <- xts(bench_raw, order.by = index(port.xts))
++ } else if (length(bench_raw) == nrow(port.xts) + 1) {
++   bench_aligned <- xts(bench_raw[-1], order.by = index(port.xts))
++   message("Aligned benchmark by dropping its first observation (bench length was 1 greater).")
++ } else if (length(bench_raw) + 1 == nrow(port.xts)) {
++   # maybe bench was one shorter
++   bench_aligned <- xts(c(NA, bench_raw), order.by = index(port.xts))
++   message("Prepended NA to benchmark to align lengths (bench length was 1 shorter).")
++ } else {
++   stop("Benchmark length (", length(bench_raw), ") does not match port.xts rows (", nrow(port.xts), "). Align dates or provide 'dates_plot'.")
++ }
+> 
+> # 2) function to compute IR robustly per column
+> compute_ir <- function(Ra_xts, Rb_xts, scale = 252) {
++   Ra <- as.numeric(coredata(Ra_xts))
++   Rb <- as.numeric(coredata(Rb_xts))
++   if (length(Ra) != length(Rb)) return(NA_real_)
++   active <- Ra - Rb
++   active <- active[is.finite(active)]  # drop NA/Inf
++   if (length(active) < 2) return(NA_real_)
++   if (sd(active) == 0) return(NA_real_)   # zero tracking error -> NA
++   # IR = mean(active) * sqrt(scale) / sd(active)
++   ir <- mean(active) * sqrt(scale) / sd(active)
++   return(ir)
++ }
+> 
+> # compute across portfolios
+> ir_vec2 <- numeric(ncol(port.xts))
+> names(ir_vec2) <- colnames(port.xts)
+> for (i in seq_len(ncol(port.xts))) {
++   ir_vec2[i] <- compute_ir(port.xts[, i], bench_aligned, scale = scale)
++ }
+> 
+> # report results
+> ir_df <- data.frame(Portfolio = names(ir_vec2), InformationRatio = ir_vec2)
+> print(ir_df)
+    Portfolio InformationRatio
+MVP       MVP       -0.5037006
+MCP       MCP       -0.5041944
+MPC       MPC       -0.5043605
+MPG       MPG       -0.5044101
+MRP       MRP       -0.5044045
+> 
+> # --- required packages
+> library(xts)
+> library(PerformanceAnalytics)
+> library(knitr)
+> 
+> # --- assume port.xts already created and aligned (from previous block)
+> # Check
+> if (!exists("port.xts")) stop("port.xts not found. Run the block that builds port.xts first.")
+> if (nrow(port.xts) < 2) stop("need at least two observations in port.xts.")
+> 
+> # annualization factor (252 for daily, 12 for monthly, 52 for weekly)
+> scale <- 252
+> 
+> # function: geometric annualized return (handles NA)
+> ann_return_geom <- function(x, scale) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   # guard against -1 returns
++   if (any(1 + x <= 0)) {
++     # fall back to arithmetic approximation if product nonpositive
++     return(mean(x, na.rm = TRUE) * scale)
++   }
++   T <- length(x)
++   (prod(1 + x)^(scale / T) - 1)
++ }
+> 
+> # function: annualized std dev (sqrt scaling)
+> ann_sd <- function(x, scale) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) < 2) return(NA_real_)
++   sd(x, na.rm = TRUE) * sqrt(scale)
++ }
+> 
+> # function: per-period VaR and ES using PerformanceAnalytics (historical), return numeric
+> period_VaR <- function(x, p = 0.95) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   as.numeric(VaR(x, p = p, method = "historical"))
++ }
+> period_ES <- function(x, p = 0.95) {
++   x <- as.numeric(na.omit(x))
++   if (length(x) == 0) return(NA_real_)
++   as.numeric(ES(x, p = p, method = "historical"))
++ }
+> 
+> # Build table
+> k <- ncol(port.xts)
+> table_mat <- matrix(NA_real_, nrow = 5, ncol = k)
+> colnames(table_mat) <- colnames(port.xts)
+> rownames(table_mat) <- c("Return", "StdDev", "Sharpe Ratio (StdDev)", "Sharpe Ratio (VaR)", "Sharpe Ratio (CVaR)")
+> 
+> for (i in seq_len(k)) {
++   Ri_xts <- port.xts[, i]
++   Ri <- as.numeric(coredata(Ri_xts))
++   # sanity: at least one finite observation
++   if (all(!is.finite(Ri))) {
++     next
++   }
++ 
++   # Annualized return (geometric preferred)
++   ar <- tryCatch(ann_return_geom(Ri, scale), error = function(e) NA_real_)
++   # Annualized std
++   sd_ann <- tryCatch(ann_sd(Ri, scale), error = function(e) NA_real_)
++ 
++   # Sharpe using std dev (assume risk-free = 0). If you have Rf, subtract it from ar.
++   sharpe_std <- if (is.finite(ar) && is.finite(sd_ann) && sd_ann > 0) ar / sd_ann else NA_real_
++ 
++   # VaR and ES (period) then scaled to annual via sqrt(scale)
++   var_p <- tryCatch(period_VaR(Ri, p = 0.95), error = function(e) NA_real_)
++   es_p  <- tryCatch(period_ES(Ri, p = 0.95), error = function(e) NA_real_)
++   var_ann <- if (is.finite(var_p)) var_p * sqrt(scale) else NA_real_
++   es_ann  <- if (is.finite(es_p))  es_p  * sqrt(scale) else NA_real_
++ 
++   # Sharpe using VaR / ES (use absolute risk measure in denominator)
++   sharpe_var <- if (is.finite(ar) && is.finite(var_ann) && abs(var_ann) > 0) ar / abs(var_ann) else NA_real_
++   sharpe_es  <- if (is.finite(ar) && is.finite(es_ann)  && abs(es_ann)  > 0) ar / abs(es_ann)  else NA_real_
++ 
++   table_mat[, i] <- c(ar, sd_ann, sharpe_std, sharpe_var, sharpe_es)
++ }
+> 
+> # Add Information Ratio (compare to benchmark Y[,1])
+> # Build benchmark xts aligned with port.xts
+> if (!exists("Y")) stop("Benchmark Y not found. Provide Y (returns) before running.")
+> bench_vec <- as.numeric(coredata(Y[, 1]))
+> # convert percent -> decimal if necessary (heuristic)
+> if (abs(mean(bench_vec, na.rm = TRUE)) > 0.02) bench_vec <- bench_vec / 100
+> # align lengths
+> if (length(bench_vec) == nrow(port.xts)) {
++   bench_xts <- xts(bench_vec, order.by = index(port.xts))
++ } else if (length(bench_vec) == nrow(port.xts) + 1) {
++   bench_xts <- xts(bench_vec[-1], order.by = index(port.xts))
++ } else {
++   stop("Benchmark (Y[,1]) length mismatch vs port.xts. Lengths: bench=", length(bench_vec),
++        " port=", nrow(port.xts))
++ }
+> 
+> ir_vec <- rep(NA_real_, k)
+> names(ir_vec) <- colnames(port.xts)
+> for (i in seq_len(k)) {
++   Ri <- port.xts[, i]
++   ir_vec[i] <- tryCatch({
++     InformationRatio(Ra = Ri, Rb = bench_xts)
++   }, error = function(e) NA_real_)
++ }
+> 
+> # Combine and print
+> ir_row <- matrix(ir_vec, nrow = 1)
+> rownames(ir_row) <- "Information Ratio"
+> final_tbl <- rbind(table_mat, ir_row)
+> final_tbl_rounded <- round(final_tbl, 6)
+> 
+> kable(final_tbl_rounded, caption = "Table 11: Portfolio performance and Information Ratio")
+
+
+Table: Table 11: Portfolio performance and Information Ratio
+
+|                      |      MVP|      MCP|      MPC|      MPG|      MRP|
+|:---------------------|--------:|--------:|--------:|--------:|--------:|
+|Return                | 0.000737| 0.000654| 0.000703| 0.000621| 0.000725|
+|StdDev                | 0.001672| 0.003020| 0.002746| 0.003007| 0.002656|
+|Sharpe Ratio (StdDev) | 0.440579| 0.216500| 0.255838| 0.206555| 0.272816|
+|Sharpe Ratio (VaR)    | 0.279037| 0.184189| 0.210090| 0.180332| 0.218918|
+|Sharpe Ratio (CVaR)   | 0.190078| 0.110935| 0.125341| 0.106901| 0.130944|
+|Information Ratio     |       NA|       NA|       NA|       NA|       NA|
+> 
+> 
