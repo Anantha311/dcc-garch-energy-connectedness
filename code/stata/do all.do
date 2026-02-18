@@ -1,0 +1,5 @@
+do "C:\Users\Anantha\OneDrive\Desktop\Anantha\BITS GOA\Academics\3 - 1\FRAM\Project\Daily_Code\Normal\EPU_daily.do"
+do "C:\Users\Anantha\OneDrive\Desktop\Anantha\BITS GOA\Academics\3 - 1\FRAM\Project\Daily_Code\Normal\Carbon_daily.do"
+do "C:\Users\Anantha\OneDrive\Desktop\Anantha\BITS GOA\Academics\3 - 1\FRAM\Project\Daily_Code\Normal\GPR_daily.do"
+do "C:\Users\Anantha\OneDrive\Desktop\Anantha\BITS GOA\Academics\3 - 1\FRAM\Project\Daily_Code\Normal\OVX_daily.do"
+do "C:\Users\Anantha\OneDrive\Desktop\Anantha\BITS GOA\Academics\3 - 1\FRAM\Project\Daily_Code\Normal\VIX_daily.do"
